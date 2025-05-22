@@ -56,16 +56,8 @@ const expenseSchema = z.object({
   }
 });
 
-// Este tipo representa os valores do formulário.
-// Ao submeter, se for uma nova compra parcelada, `amount` é o valor total.
-// Se for edição de uma despesa/parcela existente, `amount` é o valor daquela despesa/parcela.
 export type ExpenseFormValues = z.infer<typeof expenseSchema>;
 
-
-// O tipo para onSubmit é Omit<Expense, "id"> quando é uma despesa única
-// ou ExpenseFormValues quando pode ser uma compra parcelada.
-// Para simplificar, a página que consome o form (ExpensesPage) vai lidar com a lógica de parcelamento.
-// O form submete ExpenseFormValues.
 interface ExpenseFormProps {
   onSubmit: (data: ExpenseFormValues) => void;
   initialData?: Expense | null;
@@ -80,11 +72,11 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
     defaultValues: initialData
       ? {
           description: initialData.description,
-          amount: initialData.amount, // Na edição, `amount` é o valor da parcela/despesa existente.
+          amount: initialData.amount, 
           category: initialData.category,
           date: initialData.date ? new Date(new Date(initialData.date).getFullYear(), new Date(initialData.date).getMonth(), 1) : new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-          isInstallmentPurchase: false, // Não se pode transformar uma despesa existente em parcelada via edição simples
-          // numberOfInstallments não é editável aqui para uma parcela existente.
+          isInstallmentPurchase: false, 
+          // numberOfInstallments não é definido aqui para edição, pois não se edita a estrutura de parcelamento.
         }
       : {
           description: "",
@@ -92,13 +84,13 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
           category: defaultExpenseCategories[0],
           date: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
           isInstallmentPurchase: false,
-          numberOfInstallments: undefined,
+          numberOfInstallments: undefined, // Importante: começa como undefined
         },
   });
 
   const handleSubmit = (data: ExpenseFormValues) => {
     onSubmit(data);
-     if (!initialData) { // Resetar apenas se for um novo lançamento
+     if (!initialData) { 
       form.reset({
         description: "",
         amount: 0,
@@ -111,7 +103,7 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
   };
 
   const isEditingInstallment = !!initialData?.isInstallment;
-  const showNewInstallmentFields = !initialData; // Mostrar campos de parcelamento apenas para novas despesas
+  const showNewInstallmentFields = !initialData; 
   const isInstallmentPurchaseMode = form.watch("isInstallmentPurchase");
 
   return (
@@ -225,7 +217,7 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
                         }}
                         captionLayout="buttons"
                         fromYear={new Date().getFullYear() - 20}
-                        toYear={new Date().getFullYear() + 20} // Aumentado o range para o futuro
+                        toYear={new Date().getFullYear() + 20}
                         defaultMonth={field.value || new Date()}
                         locale={ptBR}
                       />
@@ -265,7 +257,21 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
                       <FormItem>
                         <FormLabel>Número de Parcelas</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="Ex: 12" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} />
+                          <Input
+                            type="number"
+                            placeholder="Ex: 12"
+                            {...field} // Espalha as props do field (name, onBlur, ref)
+                            value={field.value ?? ''} // Garante que value nunca seja undefined
+                            onChange={e => {
+                              const rawValue = e.target.value;
+                              if (rawValue === '') {
+                                field.onChange(undefined); // Passa undefined se o campo estiver vazio
+                              } else {
+                                const num = parseInt(rawValue, 10);
+                                field.onChange(isNaN(num) ? undefined : num); // Passa o número ou undefined se NaN
+                              }
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
