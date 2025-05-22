@@ -4,14 +4,21 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { addUser, findUserByUsername, verifyPassword } from '@/lib/auth-utils'; // Importar novas funções
+import { auth } from '@/lib/firebase'; // Importar auth do Firebase
+import { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut,
+  type User 
+} from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType {
-  currentUser: string | null;
-  login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>; // Modificado
-  logout: () => void;
-  register: (username: string, password: string) => Promise<{ success: boolean; message?: string }>; // Novo
+  currentUser: User | null; // Agora é o objeto User do Firebase
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  logout: () => Promise<void>;
+  register: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   isLoading: boolean;
 }
 
@@ -30,79 +37,87 @@ function LoadingScreen() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [authChecked, setAuthChecked] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Combina initialLoading e authChecked
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('realwise_currentUser');
-    if (storedUser) {
-      setCurrentUser(storedUser);
-    }
-    setInitialLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      setIsLoading(false);
+    });
+    return () => unsubscribe(); // Cleanup subscription on unmount
   }, []);
 
   useEffect(() => {
-    if (!initialLoading) {
+    if (!isLoading) {
       const publicPaths = ['/login', '/register'];
       const isPublicPath = publicPaths.includes(pathname);
 
       if (currentUser && isPublicPath) {
         router.push('/');
       } else if (!currentUser && !isPublicPath) {
+        // Evitar redirecionamento para rotas internas do Next.js ou API
         if (!pathname.startsWith('/api/') && !pathname.startsWith('/_next/')) {
           router.push('/login');
         }
       }
-      setAuthChecked(true);
     }
-  }, [currentUser, pathname, router, initialLoading]);
+  }, [currentUser, pathname, router, isLoading]);
 
-  const login = async (username: string, password: string): Promise<{ success: boolean; message?: string }> => {
-    const user = findUserByUsername(username);
-    if (!user) {
-      return { success: false, message: "Usuário não encontrado." };
-    }
-    if (!verifyPassword(password, user.hashedPassword)) {
-      return { success: false, message: "Senha incorreta." };
-    }
-    localStorage.setItem('realwise_currentUser', user.username);
-    setCurrentUser(user.username);
-    return { success: true };
-  };
-
-  const logout = () => {
-    localStorage.removeItem('realwise_currentUser');
-    setCurrentUser(null);
-    router.push('/login'); // Garante o redirecionamento imediato
-  };
-
-  const register = async (username: string, password: string): Promise<{ success: boolean; message?: string }> => {
-    const result = addUser(username, password);
-    if (result.success) {
-      // Auto-login após registro bem-sucedido
-      localStorage.setItem('realwise_currentUser', username);
-      setCurrentUser(username);
+  const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       return { success: true };
+    } catch (error: any) {
+      console.error("Erro de login:", error);
+      let message = "Falha no login. Verifique suas credenciais.";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        message = "E-mail ou senha inválidos.";
+      } else if (error.code === 'auth/invalid-email') {
+        message = "Formato de e-mail inválido.";
+      }
+      return { success: false, message };
     }
-    return result; // Retorna { success: false, message: ... }
   };
 
-  if (!authChecked && !initialLoading) { // Pequena correção na condição para evitar piscar o loading screen desnecessariamente
-     // Se não checou a autenticação E não está no carregamento inicial, mostra o LoadingScreen
-     // Isso ajuda a cobrir o momento entre o fim do initialLoading e o authChecked se tornar true
-     return <LoadingScreen />;
-  }
-  if (initialLoading) { // Se ainda está carregando o usuário do localStorage
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      // O useEffect cuidará do redirecionamento
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+      toast({ title: "Erro ao Sair", description: "Não foi possível fazer logout.", variant: "destructive" });
+    }
+  };
+
+  const register = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      // O onAuthStateChanged irá atualizar currentUser e o useEffect cuidará do redirecionamento
+      return { success: true };
+    } catch (error: any) {
+      console.error("Erro de registro:", error);
+      let message = "Falha no registro.";
+      if (error.code === 'auth/email-already-in-use') {
+        message = "Este e-mail já está em uso.";
+      } else if (error.code === 'auth/invalid-email') {
+        message = "Formato de e-mail inválido.";
+      } else if (error.code === 'auth/weak-password') {
+        message = "A senha é muito fraca. Use pelo menos 6 caracteres.";
+      }
+      return { success: false, message };
+    }
+  };
+  
+  if (isLoading) {
     return <LoadingScreen />;
   }
 
-
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout, register, isLoading: initialLoading || !authChecked }}>
+    <AuthContext.Provider value={{ currentUser, login, logout, register, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

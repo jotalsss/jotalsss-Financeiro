@@ -20,7 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePathname } from "next/navigation";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { currentUser, logout, isLoading: authIsLoading } = useAuth(); // Adicionado isLoading
+  const { currentUser, logout, isLoading: authIsLoading } = useAuth();
   const pathname = usePathname();
 
   // Se estiver carregando ou não houver usuário, ou estiver em rotas públicas, não renderizar o layout principal.
@@ -28,6 +28,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (authIsLoading || !currentUser || pathname === '/login' || pathname === '/register') {
     return <>{children}</>; 
   }
+
+  const userDisplayName = currentUser?.email || "Usuário"; // Mostrar e-mail ou um placeholder
 
   return (
     <SidebarProvider defaultOpen>
@@ -40,8 +42,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </h1>
           </Link>
           {currentUser && (
-            <p className="text-xs text-muted-foreground mt-1 group-data-[collapsible=icon]:hidden">
-              Usuário: {currentUser}
+            <p className="text-xs text-muted-foreground mt-1 group-data-[collapsible=icon]:hidden truncate" title={userDisplayName}>
+              {userDisplayName}
             </p>
           )}
         </SidebarHeader>

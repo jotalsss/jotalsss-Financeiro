@@ -9,9 +9,9 @@ import { LayoutDashboard, Activity, Loader2 } from "lucide-react";
 import { MonthlyCategoryExpenseChart as MonthlyExpensesDetailChart } from "@/components/dashboard/monthly-category-expense-chart";
 import { MonthNavigator } from "@/components/common/month-navigator";
 import { startOfMonth, subMonths, addMonths, getMonth, getYear } from "date-fns";
-import { Skeleton } from "@/components/ui/skeleton";
-import AppLayout from "@/components/layout/app-layout"; // Import AppLayout
-import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
+// Removido Skeleton pois não é usado diretamente aqui, os componentes filhos têm seus skeletons
+import AppLayout from "@/components/layout/app-layout";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function DashboardPage() {
   const [currentDate, setCurrentDate] = useState(startOfMonth(new Date()));
@@ -29,7 +29,6 @@ export default function DashboardPage() {
     return { month: getMonth(currentDate), year: getYear(currentDate) };
   }, [currentDate]);
 
-  // Mostra um loader enquanto a autenticação está sendo verificada ou se não há usuário
   if (authIsLoading || !currentUser) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -38,12 +37,14 @@ export default function DashboardPage() {
     );
   }
   
+  const userDisplayName = currentUser?.email || "Usuário";
+
   return (
-    <AppLayout> {/* Envolve o conteúdo da página com AppLayout */}
+    <AppLayout>
       <div className="space-y-6">
         <PageHeader
           title="Painel"
-          description={`Bem-vindo(a), ${currentUser}! Aqui está seu resumo financeiro.`}
+          description={`Bem-vindo(a), ${userDisplayName}! Aqui está seu resumo financeiro.`}
           icon={LayoutDashboard}
         />
 

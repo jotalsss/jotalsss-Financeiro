@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState(""); // Mudou de username para email
   const [password, setPassword] = useState("");
   const { login, currentUser, isLoading: authIsLoading } = useAuth();
   const { toast } = useToast();
@@ -28,20 +28,21 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    if (!username.trim() || !password.trim()) {
+    if (!email.trim() || !password.trim()) {
       toast({
         title: "Campos Obrigatórios",
-        description: "Por favor, insira o nome de usuário e a senha.",
+        description: "Por favor, insira o e-mail e a senha.",
         variant: "destructive",
       });
       setIsSubmitting(false);
       return;
     }
 
-    const result = await login(username.trim(), password);
+    const result = await login(email.trim(), password);
     
     if (result.success) {
       // O redirecionamento é tratado pelo AuthProvider/useEffect
+      // toast({ title: "Login Bem-Sucedido!", description: "Bem-vindo(a) de volta!"});
     } else {
       toast({
         title: "Erro de Login",
@@ -52,6 +53,7 @@ export default function LoginPage() {
     setIsSubmitting(false);
   };
   
+  // Se auth estiver carregando, ou se não estiver carregando E já houver um usuário logado
   if (authIsLoading || (!authIsLoading && currentUser)) {
     return (
       <div className="flex h-screen items-center justify-center bg-background p-4">
@@ -66,18 +68,18 @@ export default function LoginPage() {
         <CardHeader className="items-center text-center">
            <Coins className="h-12 w-12 text-primary mb-4" />
           <CardTitle className="text-3xl font-bold">Bem-vindo ao RealWise!</CardTitle>
-          <CardDescription className="text-base">Entre com seu nome de usuário e senha.</CardDescription>
+          <CardDescription className="text-base">Entre com seu e-mail e senha.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="username">Nome de Usuário</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="ex: joaosilva"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email" 
+                placeholder="ex: joao.silva@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
                 disabled={isSubmitting}

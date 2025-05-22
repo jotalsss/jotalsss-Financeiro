@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Coins, Loader2, UserPlus } from "lucide-react";
+import { UserPlus, Loader2 } from "lucide-react"; // Removido Coins
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState(""); // Mudou de username para email
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const { register, currentUser, isLoading: authIsLoading } = useAuth();
@@ -22,7 +22,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!authIsLoading && currentUser) {
-      router.push('/'); // Redireciona se já estiver logado
+      router.push('/'); 
     }
   }, [currentUser, authIsLoading, router]);
 
@@ -30,7 +30,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (!username.trim() || !password.trim() || !confirmPassword.trim()) {
+    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
       toast({
         title: "Campos Obrigatórios",
         description: "Por favor, preencha todos os campos.",
@@ -50,17 +50,21 @@ export default function RegisterPage() {
       return;
     }
     
-    // Adicionar validação de força da senha (opcional para protótipo, mas bom para produção)
-    // Ex: if (password.length < 6) { toast({ title: "Senha Fraca", ...}); return; }
+    // Validação de força da senha do Firebase é feita no backend (mínimo 6 caracteres)
+    // if (password.length < 6) { 
+    //   toast({ title: "Senha Fraca", description: "A senha deve ter pelo menos 6 caracteres.", variant: "destructive"}); 
+    //   setIsSubmitting(false);
+    //   return; 
+    // }
 
-    const result = await register(username.trim(), password);
+    const result = await register(email.trim(), password);
 
     if (result.success) {
       toast({
         title: "Registro Bem-Sucedido!",
-        description: `Bem-vindo(a), ${username.trim()}!`,
+        description: `Bem-vindo(a)! Sua conta foi criada.`,
       });
-      // O AuthContext deve redirecionar automaticamente após o login bem-sucedido (que ocorre no register)
+      // O AuthContext (onAuthStateChanged) deve redirecionar automaticamente após o registro bem-sucedido
     } else {
       toast({
         title: "Erro no Registro",
@@ -90,13 +94,13 @@ export default function RegisterPage() {
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="username">Nome de Usuário</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="Escolha um nome de usuário"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="seu.email@exemplo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
                 disabled={isSubmitting}
@@ -107,7 +111,7 @@ export default function RegisterPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Crie uma senha"
+                placeholder="Crie uma senha (mín. 6 caracteres)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -127,7 +131,7 @@ export default function RegisterPage() {
               />
             </div>
             <p className="text-xs text-muted-foreground pt-1">
-              Lembre-se: para este protótipo, as senhas são armazenadas de forma insegura. Não use senhas reais.
+              Ao se registrar, você concorda com nossos Termos de Serviço e Política de Privacidade (links de exemplo).
             </p>
             <Button type="submit" className="w-full text-lg py-6" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Criar Conta"}
