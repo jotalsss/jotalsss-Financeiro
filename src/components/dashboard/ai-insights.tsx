@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Expense } from "@/lib/types";
 import { getMonth, getYear, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 interface AiInsightsProps {
@@ -35,7 +36,7 @@ export function AiInsights({ selectedMonth, selectedYear }: AiInsightsProps) {
     if (typeof selectedMonth === 'number' && typeof selectedYear === 'number') {
       return { month: selectedMonth, year: selectedYear };
     }
-    return undefined; // Para insights gerais se nenhum mês for selecionado
+    return undefined;
   }, [selectedMonth, selectedYear]);
 
   const aggregatedExpenses = useMemo(() => {
@@ -47,9 +48,6 @@ export function AiInsights({ selectedMonth, selectedYear }: AiInsightsProps) {
         return getMonth(expenseDate) === monthYearFilter.month && getYear(expenseDate) === monthYearFilter.year;
       });
     }
-    // Se não houver filtro, considera todas as despesas (para um resumo geral, se aplicável)
-    // Mas para este caso, se monthYearFilter estiver definido, filtramos. Caso contrário, poderíamos mostrar insights gerais.
-    // Para ser consistente com o painel, vamos focar em dados mensais se o filtro existir.
 
     return expensesToConsider.reduce((acc, expense) => {
       const existingCategory = acc.find(e => e.category === expense.category);
@@ -69,7 +67,7 @@ export function AiInsights({ selectedMonth, selectedYear }: AiInsightsProps) {
 
   const currentTotalIncomeForPeriod = useMemo(() => {
     if (!isClient) return 0;
-    return getTotalIncome(monthYearFilter); // Usa o filtro (pode ser undefined)
+    return getTotalIncome(monthYearFilter);
   }, [getTotalIncome, isClient, monthYearFilter]);
 
 
@@ -79,6 +77,11 @@ export function AiInsights({ selectedMonth, selectedYear }: AiInsightsProps) {
     setIsLoading(true);
     setError(null);
     setInsights(null);
+
+    let toastTitleSuffix = '';
+    if (monthYearFilter) {
+      toastTitleSuffix = ` para ${format(new Date(monthYearFilter.year, monthYearFilter.month), "MMMM yyyy", { locale: ptBR })}`;
+    }
 
     if (monthYearFilter && currentTotalIncomeForPeriod === 0 && aggregatedExpenses.length === 0) {
       toast({
@@ -110,7 +113,7 @@ export function AiInsights({ selectedMonth, selectedYear }: AiInsightsProps) {
       const result = await generateFinancialTips(input);
       setInsights(result.tips);
       toast({
-        title: `Insights Gerados ${monthYearFilter ? `para ${format(new Date(monthYearFilter.year, monthYearFilter.month), "MMMM yyyy", { locale: ptBR })}` : ''}`,
+        title: `Insights Gerados${toastTitleSuffix}`,
         description: "Suas dicas financeiras personalizadas estão prontas!",
       });
     } catch (e) {
@@ -126,7 +129,21 @@ export function AiInsights({ selectedMonth, selectedYear }: AiInsightsProps) {
     }
   }, [isClient, currentTotalIncomeForPeriod, aggregatedExpenses, financialGoalsString, toast, monthYearFilter, incomeList, expenseList]);
 
-  const monthDisplay = monthYearFilter ? format(new Date(monthYearFilter.year, monthYearFilter.month), "MMMM yyyy", { locale: ptBR }) : null;
+  const monthDisplayString = useMemo(() => {
+    if (monthYearFilter) {
+      return format(new Date(monthYearFilter.year, monthYearFilter.month), "MMMM yyyy", { locale: ptBR });
+    }
+    return null;
+  }, [monthYearFilter]);
+
+  const cardDescriptionText = `Receba dicas personalizadas com base em suas receitas, despesas e metas${monthDisplayString ? ` de ${monthDisplayString}` : ' gerais'}.`;
+  
+  const placeholderText = `Clique no botão abaixo para gerar suas dicas financeiras personalizadas${monthDisplayString ? ` para ${monthDisplayString}` : ''}.`;
+
+  let generateButtonText = insights ? "Gerar Novos Insights" : "Gerar Insights";
+  if (monthDisplayString) {
+    generateButtonText += ` para ${monthDisplayString}`;
+  }
 
 
   if (!isClient) {
@@ -163,7 +180,7 @@ export function AiInsights({ selectedMonth, selectedYear }: AiInsightsProps) {
           Insights Financeiros com IA
         </CardTitle>
         <CardDescription>
-          Receba dicas personalizadas com base em suas receitas, despesas e metas {monthDisplay ? `de ${monthDisplay}` : 'gerais'}.
+          {cardDescriptionText}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -185,7 +202,7 @@ export function AiInsights({ selectedMonth, selectedYear }: AiInsightsProps) {
           <div className="flex h-40 flex-col items-center justify-center rounded-md border border-dashed bg-muted/30 p-4 text-center">
             <Sparkles className="h-10 w-10 text-muted-foreground/50" />
             <p className="mt-2 text-sm text-muted-foreground">
-              Clique no botão abaixo para gerar suas dicas financeiras personalizadas {monthDisplay ? `para ${monthDisplay}` : ''}.
+              {placeholderText}
             </p>
           </div>
         )}
@@ -209,7 +226,7 @@ export function AiInsights({ selectedMonth, selectedYear }: AiInsightsProps) {
           ) : (
             <Sparkles className="mr-2 h-4 w-4" />
           )}
-          {insights ? `Gerar Novos Insights ${monthDisplay ? `para ${monthDisplay}` : ''}` : `Gerar Insights ${monthDisplay ? `para ${monthDisplay}` : ''}`}
+          {generateButtonText}
         </Button>
       </CardFooter>
     </Card>

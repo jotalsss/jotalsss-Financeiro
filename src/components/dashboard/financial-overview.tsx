@@ -2,16 +2,17 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, TrendingUp, TrendingDown, Scale } from "lucide-react";
+import { TrendingUp, TrendingDown, Scale } from "lucide-react"; // Removed DollarSign as it's not used
 import { useFinancialData } from "@/hooks/use-financial-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState, useMemo } from "react";
+import type { LucideIcon } from "lucide-react"; // For explicit typing
 
-const StatCard = ({ title, value, icon: Icon, colorClass, isLoading }: { title: string; value: string; icon: React.ElementType; colorClass: string; isLoading?: boolean }) => (
+const StatCard = ({ title, value, icon: IconComponent, colorClass, isLoading }: { title: string; value: string; icon: LucideIcon; colorClass: string; isLoading?: boolean }) => (
   <Card>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      <Icon className={`h-5 w-5 ${colorClass}`} />
+      {IconComponent && <IconComponent className={`h-5 w-5 ${colorClass}`} />}
     </CardHeader>
     <CardContent>
       {isLoading ? (
@@ -38,7 +39,7 @@ export function FinancialOverview({ selectedMonth, selectedYear, isLoading: page
     
     const filter = (typeof selectedMonth === 'number' && typeof selectedYear === 'number')
       ? { month: selectedMonth, year: selectedYear }
-      : undefined; // Se não houver filtro, calcula o total geral (ou poderia ser um erro/estado vazio)
+      : undefined;
 
     const income = getTotalIncome(filter);
     const expenses = getTotalExpenses(filter);
