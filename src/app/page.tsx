@@ -6,7 +6,7 @@ import { FinancialOverview } from "@/components/dashboard/financial-overview";
 import { AiInsights } from "@/components/dashboard/ai-insights";
 import { GoalsSummary } from "@/components/dashboard/goals-summary";
 import { LayoutDashboard } from "lucide-react";
-import { MonthlyCategoryExpenseChart } from "@/components/dashboard/monthly-category-expense-chart";
+import { MonthlyCategoryExpenseChart } from "@/components/dashboard/monthly-category-expense-chart"; // Nome do import mantido por simplicidade, mas o componente foi alterado
 
 export default function DashboardPage() {
   return (
@@ -23,8 +23,8 @@ export default function DashboardPage() {
       </section>
 
       <section aria-labelledby="monthly-expenses-heading" className="my-8">
-        <h2 id="monthly-expenses-heading" className="sr-only">Despesas Mensais por Categoria</h2>
-        <MonthlyCategoryExpenseChart />
+        <h2 id="monthly-expenses-heading" className="sr-only">Despesas Mensais</h2>
+        <MonthlyCategoryExpenseChart /> 
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -40,5 +40,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
