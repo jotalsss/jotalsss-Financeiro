@@ -1,5 +1,7 @@
+
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
 // ATENÇÃO: Configure estas variáveis de ambiente no seu provedor de hospedagem (ex: Vercel).
 // Estas são as credenciais do seu projeto Firebase.
@@ -22,8 +24,10 @@ if (!getApps().length) {
   app = getApps()[0];
 }
 
-// A exportação do 'auth' do Firebase foi removida nas etapas anteriores,
-// pois a autenticação está sendo simulada localmente.
-// Se você for usar outros serviços do Firebase (Firestore, Storage, etc.),
-// esta configuração de 'app' será utilizada.
-export { app };
+// Inicialize o Cloud Firestore e exporte-o
+const db = getFirestore(app);
+
+// A autenticação simulada está em auth-simulation.ts
+// Se você fosse usar Firebase Authentication, importaria getAuth(app) aqui.
+
+export { app, db };

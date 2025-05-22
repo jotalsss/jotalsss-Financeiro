@@ -9,7 +9,8 @@ import { Target, PlusCircle } from "lucide-react";
 import { useFinancialData } from "@/hooks/use-financial-data";
 import type { Goal } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useState } from "react";
+// useEffect e useState para isClient não são mais necessários aqui
+// import { useEffect, useState } from "react";
 
 function GoalProgressItem({ goal }: { goal: Goal }) {
   const progress = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
@@ -32,36 +33,38 @@ function GoalProgressItem({ goal }: { goal: Goal }) {
   );
 }
 
-export function GoalsSummary() {
-  const { goalList } = useFinancialData();
-  const [isClient, setIsClient] = useState(false);
+interface GoalsSummaryProps {
+  isLoading?: boolean;
+}
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+export function GoalsSummary({ isLoading }: GoalsSummaryProps) {
+  // isLoadingData é o carregamento específico dos dados financeiros do hook
+  // isLoading é o carregamento combinado passado pela página pai (DashboardPage)
+  const { goalList, isLoadingData: financialHookLoading } = useFinancialData();
+  
+  // const [isClient, setIsClient] = useState(false);
+  // useEffect(() => {
+  //   setIsClient(true);
+  // }, []);
 
-  if (!isClient) {
+  // Usar o isLoading combinado
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-6 w-6 text-primary" />
-            Visão Geral das Metas
-          </CardTitle>
-          <CardDescription>Acompanhe o progresso em direção às suas metas financeiras.</CardDescription>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-6 w-6 rounded-full" />
+            <Skeleton className="h-6 w-40" />
+          </div>
+          <Skeleton className="h-4 w-3/4 mt-1" />
         </CardHeader>
         <CardContent>
-          <Skeleton className="h-8 w-full mb-4" />
-          <Skeleton className="h-8 w-full mb-4" />
-          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-16 w-full mb-4" />
+          <Skeleton className="h-16 w-full mb-4" />
+          <Skeleton className="h-16 w-full" />
         </CardContent>
         <CardFooter>
-          <Button asChild className="w-full" disabled>
-            <Link href="/goals">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Gerenciar Metas
-            </Link>
-          </Button>
+          <Skeleton className="h-10 w-full" />
         </CardFooter>
       </Card>
     );
@@ -113,4 +116,3 @@ export function GoalsSummary() {
     </Card>
   );
 }
-

@@ -11,59 +11,43 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, TrendingDown, Loader2 } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/common/delete-confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { addMonths, startOfMonth } from "date-fns";
+// addMonths e startOfMonth já estão no useFinancialData, não precisa aqui diretamente
+// import { addMonths, startOfMonth } from "date-fns"; 
 import { Skeleton } from "@/components/ui/skeleton";
 import AppLayout from "@/components/layout/app-layout";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function ExpensesPage() {
-  const { expenseList, addExpense, updateExpense, deleteExpense } = useFinancialData();
+  const { 
+    expenseList, 
+    addExpense, 
+    updateExpense, 
+    deleteExpense, 
+    isLoadingData: financialDataIsLoading 
+  } = useFinancialData();
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
-  const { toast } = useToast();
+  const { toast } = useToast(); // toast já é importado pelo useFinancialData
   const { currentUser, isLoading: authIsLoading } = useAuth();
   
+  const isLoading = authIsLoading || financialDataIsLoading;
 
   const handleFormSubmit = (data: ExpenseFormValues) => {
     if (editingExpense) {
       const expenseToUpdate: Expense = {
-        ...editingExpense,
+        ...editingExpense, // Mantém o id e outras propriedades como isInstallment, etc.
         description: data.description,
         amount: data.amount,
         category: data.category,
-        date: data.date.toISOString(),
+        date: data.date.toISOString(), // data do formulário é um objeto Date
       };
       updateExpense(expenseToUpdate);
-      toast({ title: "Despesa Atualizada", description: `A despesa "${data.description}" foi atualizada.` });
-    } else if (data.isInstallmentPurchase && data.numberOfInstallments && data.numberOfInstallments >= 2) {
-      const purchaseId = crypto.randomUUID();
-      const installmentAmount = parseFloat((data.amount / data.numberOfInstallments).toFixed(2));
-      const firstInstallmentDate = startOfMonth(data.date);
-
-      for (let i = 0; i < data.numberOfInstallments; i++) {
-        const installmentDate = addMonths(firstInstallmentDate, i);
-        const newInstallment: Omit<Expense, "id"> = {
-          description: `${data.description} (Parcela ${i + 1} de ${data.numberOfInstallments})`,
-          amount: installmentAmount,
-          category: data.category,
-          date: installmentDate.toISOString(),
-          isInstallment: true,
-          totalInstallments: data.numberOfInstallments,
-          currentInstallment: i + 1,
-          installmentPurchaseId: purchaseId,
-        };
-        addExpense(newInstallment);
-      }
-      toast({ title: "Compra Parcelada Adicionada", description: `As ${data.numberOfInstallments} parcelas de "${data.description}" foram adicionadas.` });
+      // toast é tratado dentro do updateExpense
     } else {
-      addExpense({
-        description: data.description,
-        amount: data.amount,
-        category: data.category,
-        date: data.date.toISOString(),
-      });
-      toast({ title: "Despesa Adicionada", description: `A despesa "${data.description}" foi adicionada.` });
+      // A lógica de parcelamento e despesa única agora está dentro do addExpense no hook
+      addExpense(data); 
+      // toast é tratado dentro do addExpense
     }
     
     setEditingExpense(null);
@@ -81,8 +65,8 @@ export default function ExpensesPage() {
 
   const confirmDelete = () => {
     if (expenseToDelete) {
-      deleteExpense(expenseToDelete.id);
-      toast({ title: "Despesa Excluída", description: `A despesa "${expenseToDelete.description}" foi excluída.`, variant: "destructive" });
+      deleteExpense(expenseToDelete.id, expenseToDelete.description);
+      // toast é tratado dentro do deleteExpense
       setExpenseToDelete(null);
     }
   };
@@ -92,7 +76,7 @@ export default function ExpensesPage() {
     setIsFormVisible(false);
   }
 
-  if (authIsLoading || !currentUser) {
+  if (authIsLoading || !currentUser) { // Ainda precisamos disso para o AuthProvider
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -108,10 +92,14 @@ export default function ExpensesPage() {
           description="Registre e categorize todos os seus gastos, incluindo compras parceladas."
           icon={TrendingDown}
           action={
-            !isFormVisible && (
-              <Button onClick={() => { setIsFormVisible(true); setEditingExpense(null); }}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Despesa
-              </Button>
+            isLoading ? (
+              <Skeleton className="h-10 w-40" />
+            ) : (
+              !isFormVisible && (
+                <Button onClick={() => { setIsFormVisible(true); setEditingExpense(null); }}>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Despesa
+                </Button>
+              )
             )
           }
         />
@@ -119,19 +107,29 @@ export default function ExpensesPage() {
         {(isFormVisible || editingExpense) && (
           <ExpenseForm
             onSubmit={handleFormSubmit}
-            initialData={editingExpense}
+            initialData={editingExpense} // initialData precisa que a data seja um objeto Date
             onCancel={handleCancelEdit}
           />
         )}
 
-        <ExpenseList
-          expenseList={expenseList.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())}
-          onEdit={handleEdit}
-          onDelete={(id) => {
-            const expenseItem = expenseList.find(e => e.id === id);
-            if (expenseItem) handleDeleteRequest(expenseItem);
-          }}
-        />
+        {isLoading && !isFormVisible && (
+          <div className="mt-6 space-y-4">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </div>
+        )}
+        {!isLoading && (
+          <ExpenseList
+            // A ordenação já é feita no hook ou será feita ao popular a lista
+            expenseList={expenseList} 
+            onEdit={handleEdit}
+            onDelete={(id) => {
+              const expenseItem = expenseList.find(e => e.id === id);
+              if (expenseItem) handleDeleteRequest(expenseItem);
+            }}
+          />
+        )}
+
 
         {expenseToDelete && (
           <DeleteConfirmationDialog

@@ -16,20 +16,28 @@ import AppLayout from "@/components/layout/app-layout";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function GoalsPage() {
-  const { goalList, addGoal, updateGoal, deleteGoal } = useFinancialData();
+  const { 
+    goalList, 
+    addGoal, 
+    updateGoal, 
+    deleteGoal, 
+    isLoadingData: financialDataIsLoading 
+  } = useFinancialData();
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
-  const { toast } = useToast();
+  const { toast } = useToast(); // Usado pelo hook
   const { currentUser, isLoading: authIsLoading } = useAuth();
+
+  const isLoading = authIsLoading || financialDataIsLoading;
 
   const handleFormSubmit = (data: Omit<Goal, "id">) => {
     if (editingGoal) {
       updateGoal({ ...data, id: editingGoal.id });
-      toast({ title: "Meta Atualizada", description: `A meta "${data.name}" foi atualizada.` });
+      // toast é tratado no hook
     } else {
       addGoal(data);
-      toast({ title: "Meta Definida", description: `Nova meta "${data.name}" foi definida.` });
+      // toast é tratado no hook
     }
     setEditingGoal(null);
     setIsFormVisible(false);
@@ -46,8 +54,8 @@ export default function GoalsPage() {
 
   const confirmDelete = () => {
     if (goalToDelete) {
-      deleteGoal(goalToDelete.id);
-      toast({ title: "Meta Excluída", description: `A meta "${goalToDelete.name}" foi excluída.`, variant: "destructive" });
+      deleteGoal(goalToDelete.id, goalToDelete.name);
+      // toast é tratado no hook
       setGoalToDelete(null);
     }
   };
@@ -73,10 +81,14 @@ export default function GoalsPage() {
           description="Defina suas ambições financeiras e acompanhe seu progresso."
           icon={TargetIcon}
           action={
-            !isFormVisible && (
-              <Button onClick={() => { setIsFormVisible(true); setEditingGoal(null); }}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Definir Nova Meta
-              </Button>
+            isLoading ? (
+              <Skeleton className="h-10 w-48" />
+            ) : (
+              !isFormVisible && (
+                <Button onClick={() => { setIsFormVisible(true); setEditingGoal(null); }}>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Definir Nova Meta
+                </Button>
+              )
             )
           }
         />
@@ -84,19 +96,29 @@ export default function GoalsPage() {
         {(isFormVisible || editingGoal) && (
           <GoalForm
             onSubmit={handleFormSubmit}
-            initialData={editingGoal}
+            initialData={editingGoal} // initialData precisa que a data seja um objeto Date
             onCancel={handleCancelEdit}
           />
         )}
 
-        <GoalList
-          goalList={goalList}
-          onEdit={handleEdit}
-          onDelete={(id) => {
-            const goalItem = goalList.find(g => g.id === id);
-            if (goalItem) handleDeleteRequest(goalItem);
-          }}
-        />
+        {isLoading && !isFormVisible && (
+          <div className="mt-6 grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-48 w-full" />
+          </div>
+        )}
+        {!isLoading && (
+          <GoalList
+            goalList={goalList}
+            onEdit={handleEdit}
+            onDelete={(id) => {
+              const goalItem = goalList.find(g => g.id === id);
+              if (goalItem) handleDeleteRequest(goalItem);
+            }}
+          />
+        )}
+
 
         {goalToDelete && (
           <DeleteConfirmationDialog

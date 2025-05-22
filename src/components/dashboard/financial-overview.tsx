@@ -16,7 +16,7 @@ const StatCard = ({ title, value, icon: IconComponent, colorClass, isLoading }: 
     <Card className="transition-shadow duration-200 ease-in-out hover:shadow-xl">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {IconComponent && <IconComponent className={`h-5 w-5 ${colorClass}`} />}
+        {isLoading ? <Skeleton className="h-5 w-5 rounded-full" /> : (IconComponent && <IconComponent className={`h-5 w-5 ${colorClass}`} />)}
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -36,27 +36,31 @@ interface FinancialOverviewProps {
 }
 
 export function FinancialOverview({ selectedMonth, selectedYear, isLoading: pageIsLoading }: FinancialOverviewProps) {
-  const { getTotalIncome, getTotalExpenses } = useFinancialData();
-  const [isClient, setIsClient] = useState(false);
+  // O isLoadingData do useFinancialData já considera o carregamento do Firestore.
+  // O pageIsLoading é passado da página pai, que combina authIsLoading e financialDataIsLoading.
+  const { getTotalIncome, getTotalExpenses, isLoadingData: financialHookLoading } = useFinancialData();
+  
+  // O useEffect com setIsClient não é mais necessário aqui, pois isLoading é gerenciado de forma mais central.
+  // const [isClient, setIsClient] = useState(false);
+  // useEffect(() => {
+  //   setIsClient(true);
+  // }, []);
 
   const financialData = useMemo(() => {
-    if (!isClient) return { totalIncome: 0, totalExpenses: 0, isLoadingInternal: true };
+    // Se a página estiver carregando (auth ou dados), ou se os dados do hook ainda não chegaram,
+    // ou se mês/ano não estão definidos, consideramos como carregando.
+    if (pageIsLoading || financialHookLoading || typeof selectedMonth !== 'number' || typeof selectedYear !== 'number') {
+      return { totalIncome: 0, totalExpenses: 0, isLoadingInternal: true };
+    }
     
-    const filter = (typeof selectedMonth === 'number' && typeof selectedYear === 'number')
-      ? { month: selectedMonth, year: selectedYear }
-      : undefined;
-
+    const filter = { month: selectedMonth, year: selectedYear };
     const income = getTotalIncome(filter);
     const expenses = getTotalExpenses(filter);
     return { totalIncome: income, totalExpenses: expenses, isLoadingInternal: false };
-  }, [isClient, selectedMonth, selectedYear, getTotalIncome, getTotalExpenses]);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  }, [pageIsLoading, financialHookLoading, selectedMonth, selectedYear, getTotalIncome, getTotalExpenses]);
   
   const { totalIncome, totalExpenses, isLoadingInternal } = financialData;
-  const finalIsLoading = pageIsLoading || !isClient || isLoadingInternal;
+  const finalIsLoading = pageIsLoading || isLoadingInternal; // Combina o carregamento da página com o cálculo interno
 
   const netBalance = totalIncome - totalExpenses;
 
