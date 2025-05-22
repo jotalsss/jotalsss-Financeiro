@@ -1,35 +1,37 @@
+
 "use client";
 
 import type { Income, Expense, Goal } from "@/lib/types";
 import { useState, useEffect, useCallback } from "react";
 
 function useLocalStorageState<T>(key: string, defaultValue: T) {
-  const [state, setState] = useState<T>(defaultValue);
-
-  useEffect(() => {
+  const [state, setState] = useState<T>(() => {
+    // Lazy initializer: runs only on initial mount
+    if (typeof window === 'undefined') {
+      return defaultValue;
+    }
     try {
       const storedValue = localStorage.getItem(key);
       if (storedValue) {
-        setState(JSON.parse(storedValue));
-      } else {
-        setState(defaultValue);
+        return JSON.parse(storedValue) as T;
       }
     } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error);
-      setState(defaultValue);
+      console.error(`Error reading localStorage key "${key}" on init:`, error);
     }
-  }, [key, defaultValue]);
+    return defaultValue;
+  });
 
+  // Effect to save state to localStorage when it changes
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
     try {
-      // Avoid writing default empty arrays to localStorage on initial load if nothing was stored
-      if (JSON.stringify(state) !== JSON.stringify(defaultValue) || localStorage.getItem(key)) {
-        localStorage.setItem(key, JSON.stringify(state));
-      }
+      localStorage.setItem(key, JSON.stringify(state));
     } catch (error) {
       console.error(`Error writing localStorage key "${key}":`, error);
     }
-  }, [key, state, defaultValue]);
+  }, [key, state]);
 
   return [state, setState] as const;
 }
