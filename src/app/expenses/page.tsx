@@ -8,40 +8,36 @@ import { ExpenseList } from "@/components/expenses/expense-list";
 import { useFinancialData } from "@/hooks/use-financial-data";
 import type { Expense } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, TrendingDown } from "lucide-react";
+import { PlusCircle, TrendingDown, Loader2 } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/common/delete-confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { addMonths, startOfMonth } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import AppLayout from "@/components/layout/app-layout";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ExpensesPage() {
   const { expenseList, addExpense, updateExpense, deleteExpense } = useFinancialData();
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
-  const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
+  const { currentUser, isLoading: authIsLoading } = useAuth();
   
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const handleFormSubmit = (data: ExpenseFormValues) => {
     if (editingExpense) {
-      // Editando uma despesa/parcela existente
       const expenseToUpdate: Expense = {
-        ...editingExpense, // Preserva campos de parcelamento originais se for uma parcela
+        ...editingExpense,
         description: data.description,
-        amount: data.amount, // O valor da parcela/despesa individual
+        amount: data.amount,
         category: data.category,
         date: data.date.toISOString(),
       };
       updateExpense(expenseToUpdate);
       toast({ title: "Despesa Atualizada", description: `A despesa "${data.description}" foi atualizada.` });
     } else if (data.isInstallmentPurchase && data.numberOfInstallments && data.numberOfInstallments >= 2) {
-      // Nova compra parcelada
       const purchaseId = crypto.randomUUID();
-      // data.amount aqui é o valor TOTAL da compra
       const installmentAmount = parseFloat((data.amount / data.numberOfInstallments).toFixed(2));
       const firstInstallmentDate = startOfMonth(data.date);
 
@@ -61,7 +57,6 @@ export default function ExpensesPage() {
       }
       toast({ title: "Compra Parcelada Adicionada", description: `As ${data.numberOfInstallments} parcelas de "${data.description}" foram adicionadas.` });
     } else {
-      // Nova despesa única
       addExpense({
         description: data.description,
         amount: data.amount,
@@ -73,7 +68,6 @@ export default function ExpensesPage() {
     
     setEditingExpense(null);
     setIsFormVisible(false);
-    // O reset do formulário é feito dentro do ExpenseForm se for uma nova entrada
   };
 
   const handleEdit = (expense: Expense) => {
@@ -98,63 +92,56 @@ export default function ExpensesPage() {
     setIsFormVisible(false);
   }
 
-  if (!isClient) {
-     return (
-      <div className="space-y-6">
-        <PageHeader 
-            title="Despesas" 
-            description="Registre e categorize todos os seus gastos, incluindo compras parceladas." 
-            icon={TrendingDown} 
-            action={<Skeleton className="h-10 w-48 rounded-md" />}
-        />
-        <div className="animate-pulse space-y-6">
-          {/* Espaço para o formulário se estivesse visível, mas não é o caso no estado inicial */}
-          <Skeleton className="h-96 rounded-lg" /> {/* Placeholder para ExpenseList Card */}
-        </div>
+  if (authIsLoading || !currentUser) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Despesas"
-        description="Registre e categorize todos os seus gastos, incluindo compras parceladas."
-        icon={TrendingDown}
-        action={
-          !isFormVisible && (
-            <Button onClick={() => { setIsFormVisible(true); setEditingExpense(null); }}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Despesa
-            </Button>
-          )
-        }
-      />
-
-      {(isFormVisible || editingExpense) && (
-        <ExpenseForm
-          onSubmit={handleFormSubmit}
-          initialData={editingExpense}
-          onCancel={handleCancelEdit}
+    <AppLayout>
+      <div className="space-y-6">
+        <PageHeader
+          title="Despesas"
+          description="Registre e categorize todos os seus gastos, incluindo compras parceladas."
+          icon={TrendingDown}
+          action={
+            !isFormVisible && (
+              <Button onClick={() => { setIsFormVisible(true); setEditingExpense(null); }}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Despesa
+              </Button>
+            )
+          }
         />
-      )}
 
-      <ExpenseList
-        expenseList={expenseList.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())} // Ordena por data mais recente
-        onEdit={handleEdit}
-        onDelete={(id) => {
-          const expenseItem = expenseList.find(e => e.id === id);
-          if (expenseItem) handleDeleteRequest(expenseItem);
-        }}
-      />
+        {(isFormVisible || editingExpense) && (
+          <ExpenseForm
+            onSubmit={handleFormSubmit}
+            initialData={editingExpense}
+            onCancel={handleCancelEdit}
+          />
+        )}
 
-      {expenseToDelete && (
-        <DeleteConfirmationDialog
-          open={!!expenseToDelete}
-          onOpenChange={() => setExpenseToDelete(null)}
-          onConfirm={confirmDelete}
-          itemName={`a despesa "${expenseToDelete.description}"`}
+        <ExpenseList
+          expenseList={expenseList.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())}
+          onEdit={handleEdit}
+          onDelete={(id) => {
+            const expenseItem = expenseList.find(e => e.id === id);
+            if (expenseItem) handleDeleteRequest(expenseItem);
+          }}
         />
-      )}
-    </div>
+
+        {expenseToDelete && (
+          <DeleteConfirmationDialog
+            open={!!expenseToDelete}
+            onOpenChange={() => setExpenseToDelete(null)}
+            onConfirm={confirmDelete}
+            itemName={`a despesa "${expenseToDelete.description}"`}
+          />
+        )}
+      </div>
+    </AppLayout>
   );
 }

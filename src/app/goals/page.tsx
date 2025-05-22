@@ -8,22 +8,20 @@ import { GoalList } from "@/components/goals/goal-list";
 import { useFinancialData } from "@/hooks/use-financial-data";
 import type { Goal } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Target as TargetIcon } from "lucide-react";
+import { PlusCircle, Target as TargetIcon, Loader2 } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/common/delete-confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import AppLayout from "@/components/layout/app-layout";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function GoalsPage() {
   const { goalList, addGoal, updateGoal, deleteGoal } = useFinancialData();
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
-  const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const { currentUser, isLoading: authIsLoading } = useAuth();
 
   const handleFormSubmit = (data: Omit<Goal, "id">) => {
     if (editingGoal) {
@@ -59,67 +57,56 @@ export default function GoalsPage() {
     setIsFormVisible(false);
   }
 
-  if (!isClient) {
-     return (
-      <div className="space-y-6">
-        <PageHeader 
-            title="Metas Financeiras" 
-            description="Defina suas ambições financeiras e acompanhe seu progresso." 
-            icon={TargetIcon} 
-            action={<Skeleton className="h-10 w-48 rounded-md" />} // "Definir Nova Meta"
-        />
-        <div className="animate-pulse space-y-6">
-          {/* Espaço para o formulário se estivesse visível */}
-           <div className="mt-6 grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            <Skeleton className="h-56 rounded-lg" />
-            <Skeleton className="h-56 rounded-lg" />
-            <Skeleton className="h-56 rounded-lg" />
-          </div> {/* Placeholder para GoalList */}
-        </div>
+  if (authIsLoading || !currentUser) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Metas Financeiras"
-        description="Defina suas ambições financeiras e acompanhe seu progresso."
-        icon={TargetIcon}
-        action={
-          !isFormVisible && (
-            <Button onClick={() => { setIsFormVisible(true); setEditingGoal(null); }}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Definir Nova Meta
-            </Button>
-          )
-        }
-      />
-
-      {(isFormVisible || editingGoal) && (
-        <GoalForm
-          onSubmit={handleFormSubmit}
-          initialData={editingGoal}
-          onCancel={handleCancelEdit}
+    <AppLayout>
+      <div className="space-y-6">
+        <PageHeader
+          title="Metas Financeiras"
+          description="Defina suas ambições financeiras e acompanhe seu progresso."
+          icon={TargetIcon}
+          action={
+            !isFormVisible && (
+              <Button onClick={() => { setIsFormVisible(true); setEditingGoal(null); }}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Definir Nova Meta
+              </Button>
+            )
+          }
         />
-      )}
 
-      <GoalList
-        goalList={goalList}
-        onEdit={handleEdit}
-        onDelete={(id) => {
-          const goalItem = goalList.find(g => g.id === id);
-          if (goalItem) handleDeleteRequest(goalItem);
-        }}
-      />
+        {(isFormVisible || editingGoal) && (
+          <GoalForm
+            onSubmit={handleFormSubmit}
+            initialData={editingGoal}
+            onCancel={handleCancelEdit}
+          />
+        )}
 
-      {goalToDelete && (
-        <DeleteConfirmationDialog
-          open={!!goalToDelete}
-          onOpenChange={() => setGoalToDelete(null)}
-          onConfirm={confirmDelete}
-          itemName={`a meta "${goalToDelete.name}"`}
+        <GoalList
+          goalList={goalList}
+          onEdit={handleEdit}
+          onDelete={(id) => {
+            const goalItem = goalList.find(g => g.id === id);
+            if (goalItem) handleDeleteRequest(goalItem);
+          }}
         />
-      )}
-    </div>
+
+        {goalToDelete && (
+          <DeleteConfirmationDialog
+            open={!!goalToDelete}
+            onOpenChange={() => setGoalToDelete(null)}
+            onConfirm={confirmDelete}
+            itemName={`a meta "${goalToDelete.name}"`}
+          />
+        )}
+      </div>
+    </AppLayout>
   );
 }

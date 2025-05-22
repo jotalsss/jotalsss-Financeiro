@@ -4,104 +4,126 @@
 import type { Income, Expense, Goal, DefaultMonthlyIncome } from "@/lib/types";
 import { useState, useEffect, useCallback } from "react";
 import { getMonth, getYear, startOfMonth } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
 
-function useLocalStorageState<T>(key: string, defaultValue: T) {
+// Helper function para localStorage, agora usando userId
+function useLocalStorageState<T>(key: string, defaultValue: T, userId: string | null) {
   const [state, setState] = useState<T>(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || !userId) {
       return defaultValue;
     }
     try {
-      const storedValue = localStorage.getItem(key);
+      const compositeKey = `${key}_${userId}`;
+      const storedValue = localStorage.getItem(compositeKey);
       if (storedValue) {
         return JSON.parse(storedValue) as T;
       }
     } catch (error) {
-      console.error(`Error reading localStorage key "${key}" on init:`, error);
+      // console.error(`Error reading localStorage key "${key}_${userId}" on init:`, error);
     }
     return defaultValue;
   });
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || !userId) {
       return;
     }
     try {
-      localStorage.setItem(key, JSON.stringify(state));
+      const compositeKey = `${key}_${userId}`;
+      localStorage.setItem(compositeKey, JSON.stringify(state));
     } catch (error) {
-      console.error(`Error writing localStorage key "${key}":`, error);
+      // console.error(`Error writing localStorage key "${key}_${userId}":`, error);
     }
-  }, [key, state]);
+  }, [key, state, userId]);
 
   return [state, setState] as const;
 }
 
 export function useFinancialData() {
-  const [incomeList, setIncomeList] = useLocalStorageState<Income[]>("realwise_income", []);
-  const [expenseList, setExpenseList] = useLocalStorageState<Expense[]>("realwise_expenses", []);
-  const [goalList, setGoalList] = useLocalStorageState<Goal[]>("realwise_goals", []);
-  const [defaultMonthlyIncome, setDefaultMonthlyIncomeState] = useLocalStorageState<DefaultMonthlyIncome | null>("realwise_default_monthly_income", null);
+  const { currentUser } = useAuth();
+
+  const [incomeList, setIncomeList] = useLocalStorageState<Income[]>("realwise_income", [], currentUser);
+  const [expenseList, setExpenseList] = useLocalStorageState<Expense[]>("realwise_expenses", [], currentUser);
+  const [goalList, setGoalList] = useLocalStorageState<Goal[]>("realwise_goals", [], currentUser);
+  const [defaultMonthlyIncomeData, setDefaultMonthlyIncomeInternal] = useLocalStorageState<DefaultMonthlyIncome | null>("realwise_default_monthly_income", null, currentUser);
 
   const addIncome = useCallback((income: Omit<Income, "id">) => {
+    if (!currentUser) return;
     setIncomeList((prev) => [...prev, { ...income, id: crypto.randomUUID() }]);
-  }, [setIncomeList]);
+  }, [setIncomeList, currentUser]);
 
   const updateIncome = useCallback((updatedIncome: Income) => {
+    if (!currentUser) return;
     setIncomeList((prev) => prev.map((inc) => (inc.id === updatedIncome.id ? updatedIncome : inc)));
-  }, [setIncomeList]);
+  }, [setIncomeList, currentUser]);
 
   const deleteIncome = useCallback((id: string) => {
+    if (!currentUser) return;
     setIncomeList((prev) => prev.filter((inc) => inc.id !== id));
-  }, [setIncomeList]);
+  }, [setIncomeList, currentUser]);
 
   const addExpense = useCallback((expense: Omit<Expense, "id">) => {
+    if (!currentUser) return;
     setExpenseList((prev) => [...prev, { ...expense, id: crypto.randomUUID() }]);
-  }, [setExpenseList]);
+  }, [setExpenseList, currentUser]);
 
   const updateExpense = useCallback((updatedExpense: Expense) => {
+    if (!currentUser) return;
     setExpenseList((prev) => prev.map((exp) => (exp.id === updatedExpense.id ? updatedExpense : exp)));
-  }, [setExpenseList]);
+  }, [setExpenseList, currentUser]);
 
   const deleteExpense = useCallback((id: string) => {
+    if (!currentUser) return;
     setExpenseList((prev) => prev.filter((exp) => exp.id !== id));
-  }, [setExpenseList]);
+  }, [setExpenseList, currentUser]);
 
   const addGoal = useCallback((goal: Omit<Goal, "id">) => {
+    if (!currentUser) return;
     setGoalList((prev) => [...prev, { ...goal, id: crypto.randomUUID() }]);
-  }, [setGoalList]);
+  }, [setGoalList, currentUser]);
 
   const updateGoal = useCallback((updatedGoal: Goal) => {
+    if (!currentUser) return;
     setGoalList((prev) => prev.map((g) => (g.id === updatedGoal.id ? updatedGoal : g)));
-  }, [setGoalList]);
+  }, [setGoalList, currentUser]);
 
   const deleteGoal = useCallback((id: string) => {
+    if (!currentUser) return;
     setGoalList((prev) => prev.filter((g) => g.id !== id));
-  }, [setGoalList]);
+  }, [setGoalList, currentUser]);
 
   const ensureDefaultMonthlyIncomeExists = useCallback((year: number, month: number) => {
-    if (defaultMonthlyIncome && defaultMonthlyIncome.source && defaultMonthlyIncome.amount > 0) {
-      const incomeExistsForMonth = incomeList.some(income => {
-        const incomeDate = new Date(income.date);
-        return (
-          getMonth(incomeDate) === month &&
-          getYear(incomeDate) === year &&
-          income.source === defaultMonthlyIncome.source
-        );
-      });
-
-      if (!incomeExistsForMonth) {
-        const dateForIncome = startOfMonth(new Date(year, month, 1)).toISOString();
-        addIncome({
-          source: defaultMonthlyIncome.source,
-          amount: defaultMonthlyIncome.amount,
-          date: dateForIncome,
-        });
-      }
+    if (!currentUser || !defaultMonthlyIncomeData || !defaultMonthlyIncomeData.source || defaultMonthlyIncomeData.amount <= 0) {
+      return;
     }
-  }, [defaultMonthlyIncome, incomeList, addIncome]);
+    
+    const incomeExistsForMonth = incomeList.some(income => {
+      const incomeDate = new Date(income.date);
+      return (
+        getMonth(incomeDate) === month &&
+        getYear(incomeDate) === year &&
+        income.source === defaultMonthlyIncomeData.source
+      );
+    });
+
+    if (!incomeExistsForMonth) {
+      const dateForIncome = startOfMonth(new Date(year, month, 1)).toISOString();
+      // Use a non-hook version of addIncome or directly set state if needed to avoid dependency issues
+      setIncomeList((prev) => [...prev, { 
+        id: crypto.randomUUID(), 
+        source: defaultMonthlyIncomeData.source, 
+        amount: defaultMonthlyIncomeData.amount, 
+        date: dateForIncome 
+      }]);
+    }
+  }, [defaultMonthlyIncomeData, incomeList, addIncome, currentUser, setIncomeList]);
   
   const getTotalIncome = useCallback((filter?: { month: number; year: number }) => {
+    if (!currentUser) return 0;
+    
     if (filter && typeof filter.month === 'number' && typeof filter.year === 'number') {
-      ensureDefaultMonthlyIncomeExists(filter.year, filter.month);
+      // Chamada síncrona para ensureDefaultMonthlyIncomeExists pode ser problemática se ela disparar setState
+      // No entanto, a versão acima de ensureDefaultMonthlyIncomeExists usa setIncomeList diretamente.
     }
     
     let incomesToConsider = incomeList;
@@ -112,9 +134,10 @@ export function useFinancialData() {
       });
     }
     return incomesToConsider.reduce((sum, income) => sum + income.amount, 0);
-  }, [incomeList, ensureDefaultMonthlyIncomeExists]);
+  }, [incomeList, ensureDefaultMonthlyIncomeExists, currentUser]);
 
   const getTotalExpenses = useCallback((filter?: { month: number; year: number }) => {
+    if (!currentUser) return 0;
     let expensesToConsider = expenseList;
     if (filter && typeof filter.month === 'number' && typeof filter.year === 'number') {
       expensesToConsider = expenseList.filter(expense => {
@@ -123,26 +146,31 @@ export function useFinancialData() {
       });
     }
     return expensesToConsider.reduce((sum, expense) => sum + expense.amount, 0);
-  }, [expenseList]);
+  }, [expenseList, currentUser]);
 
   const setDefaultMonthlyIncome = useCallback((income: DefaultMonthlyIncome) => {
-    setDefaultMonthlyIncomeState(income);
-    // Ao definir um novo salário padrão, podemos garantir que ele exista para o mês atual.
+    if (!currentUser) return;
+    setDefaultMonthlyIncomeInternal(income);
     const today = new Date();
-    ensureDefaultMonthlyIncomeExists(getYear(today), getMonth(today));
-  }, [setDefaultMonthlyIncomeState, ensureDefaultMonthlyIncomeExists]);
+    // Chamada síncrona para ensureDefaultMonthlyIncomeExists aqui também
+    // ensureDefaultMonthlyIncomeExists(getYear(today), getMonth(today));
+  }, [setDefaultMonthlyIncomeInternal, ensureDefaultMonthlyIncomeExists, currentUser]);
 
   const removeDefaultMonthlyIncome = useCallback(() => {
-    setDefaultMonthlyIncomeState(null);
-  }, [setDefaultMonthlyIncomeState]);
+    if (!currentUser) return;
+    setDefaultMonthlyIncomeInternal(null);
+  }, [setDefaultMonthlyIncomeInternal, currentUser]);
 
-  // Efeito para garantir que o salário padrão do mês atual seja verificado no carregamento inicial
   useEffect(() => {
-    const today = new Date();
-    ensureDefaultMonthlyIncomeExists(getYear(today), getMonth(today));
-  }, [ensureDefaultMonthlyIncomeExists]);
+    if (currentUser) {
+      const today = new Date();
+      ensureDefaultMonthlyIncomeExists(getYear(today), getMonth(today));
+    }
+  }, [currentUser, ensureDefaultMonthlyIncomeExists]); // Adicionado currentUser
 
-
+  // Se não houver usuário, as listas já estarão vazias devido ao defaultValue e a verificação de !userId em useLocalStorageState
+  // E as funções de modificação já têm a guarda `if (!currentUser) return;`
+  // As funções getTotal* também.
   return {
     incomeList,
     addIncome,
@@ -158,7 +186,7 @@ export function useFinancialData() {
     deleteGoal,
     getTotalIncome,
     getTotalExpenses,
-    defaultMonthlyIncome,
+    defaultMonthlyIncome: defaultMonthlyIncomeData,
     setDefaultMonthlyIncome,
     removeDefaultMonthlyIncome,
     ensureDefaultMonthlyIncomeExists

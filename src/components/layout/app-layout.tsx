@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -14,9 +15,20 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Coins } from "lucide-react"; // Using Coins as a logo icon
+import { Coins, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePathname } from "next/navigation";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const { currentUser, logout } = useAuth();
+  const pathname = usePathname();
+
+  // Se não houver usuário ou estiver na página de login, não renderizar o layout principal
+  // A lógica de redirecionamento já está no AuthProvider
+  if (!currentUser || pathname === '/login') {
+    return <>{children}</>; // Renderiza apenas os filhos (ex: LoginPage)
+  }
+
   return (
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon" side="left">
@@ -27,13 +39,27 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               RealWise
             </h1>
           </Link>
+          {currentUser && (
+            <p className="text-xs text-muted-foreground mt-1 group-data-[collapsible=icon]:hidden">
+              Usuário: {currentUser}
+            </p>
+          )}
         </SidebarHeader>
         <Separator className="mb-2" />
         <SidebarContent>
           <MainNav />
         </SidebarContent>
-        <SidebarFooter className="p-4 group-data-[collapsible=icon]:hidden">
-          <p className="text-xs text-muted-foreground">
+        <SidebarFooter className="p-4 space-y-2">
+           <Button 
+            variant="ghost" 
+            className="w-full justify-start group-data-[collapsible=icon]:justify-center"
+            onClick={logout}
+            aria-label="Sair da conta"
+           >
+            <LogOut className="h-4 w-4 group-data-[collapsible=icon]:mr-0 mr-2" />
+            <span className="group-data-[collapsible=icon]:hidden">Sair</span>
+          </Button>
+          <p className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
             © {new Date().getFullYear()} RealWise
           </p>
         </SidebarFooter>
@@ -47,6 +73,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               RealWise
             </h1>
           </Link>
+          {currentUser && (
+             <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={logout}
+              className="ml-auto"
+              aria-label="Sair da conta"
+             >
+              <LogOut className="h-5 w-5" />
+            </Button>
+          )}
         </header>
         <main className="flex-1 p-4 sm:p-6">{children}</main>
       </SidebarInset>
