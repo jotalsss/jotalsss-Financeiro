@@ -40,3 +40,8 @@ export const ExpenseCategories = [
 ] as const;
 
 export type ExpenseCategory = typeof ExpenseCategories[number];
+
+export interface DefaultMonthlyIncome {
+  source: string;
+  amount: number;
+}
