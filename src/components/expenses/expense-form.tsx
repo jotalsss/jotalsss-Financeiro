@@ -37,18 +37,37 @@ import { ExpenseCategories } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { expenseCategoryIcons, defaultExpenseCategories } from "./expense-categories";
 import React from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const expenseSchema = z.object({
   description: z.string().min(2, { message: "A descrição deve ter pelo menos 2 caracteres." }),
-  amount: z.coerce.number().positive({ message: "O valor deve ser positivo." }),
+  amount: z.coerce.number().positive({ message: "O valor deve ser positivo." }), // Valor total se for nova compra parcelada, ou valor da parcela/despesa individual
   category: z.enum(ExpenseCategories, { required_error: "A categoria é obrigatória."}),
-  date: z.date({ required_error: "A data (mês/ano) é obrigatória." }),
+  date: z.date({ required_error: "A data (mês/ano) da primeira parcela ou da despesa é obrigatória." }),
+  isInstallmentPurchase: z.boolean().optional(),
+  numberOfInstallments: z.coerce.number().int().min(2, "Mínimo de 2 parcelas").optional(),
+}).superRefine((data, ctx) => {
+  if (data.isInstallmentPurchase && (!data.numberOfInstallments || data.numberOfInstallments < 2)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Para compra parcelada, o número de parcelas deve ser pelo menos 2.",
+      path: ["numberOfInstallments"],
+    });
+  }
 });
 
-type ExpenseFormValues = z.infer<typeof expenseSchema>;
+// Este tipo representa os valores do formulário.
+// Ao submeter, se for uma nova compra parcelada, `amount` é o valor total.
+// Se for edição de uma despesa/parcela existente, `amount` é o valor daquela despesa/parcela.
+export type ExpenseFormValues = z.infer<typeof expenseSchema>;
 
+
+// O tipo para onSubmit é Omit<Expense, "id"> quando é uma despesa única
+// ou ExpenseFormValues quando pode ser uma compra parcelada.
+// Para simplificar, a página que consome o form (ExpensesPage) vai lidar com a lógica de parcelamento.
+// O form submete ExpenseFormValues.
 interface ExpenseFormProps {
-  onSubmit: (data: Omit<Expense, "id">) => void;
+  onSubmit: (data: ExpenseFormValues) => void;
   initialData?: Expense | null;
   onCancel?: () => void;
 }
@@ -59,29 +78,41 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: initialData
-      ? { 
-          ...initialData, 
-          date: initialData.date ? new Date(new Date(initialData.date).getFullYear(), new Date(initialData.date).getMonth(), 1) : new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      ? {
+          description: initialData.description,
+          amount: initialData.amount, // Na edição, `amount` é o valor da parcela/despesa existente.
+          category: initialData.category,
+          date: initialData.date ? new Date(new Date(initialData.date).getFullYear(), new Date(initialData.date).getMonth(), 1) : new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+          isInstallmentPurchase: false, // Não se pode transformar uma despesa existente em parcelada via edição simples
+          // numberOfInstallments não é editável aqui para uma parcela existente.
         }
-      : { 
-          description: "", 
-          amount: 0, 
-          category: defaultExpenseCategories[0], 
-          date: new Date(new Date().getFullYear(), new Date().getMonth(), 1) 
+      : {
+          description: "",
+          amount: 0,
+          category: defaultExpenseCategories[0],
+          date: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+          isInstallmentPurchase: false,
+          numberOfInstallments: undefined,
         },
   });
 
   const handleSubmit = (data: ExpenseFormValues) => {
-    onSubmit({ ...data, date: data.date.toISOString() });
-     if (!initialData) {
-      form.reset({ 
-        description: "", 
-        amount: 0, 
-        category: defaultExpenseCategories[0], 
-        date: new Date(new Date().getFullYear(), new Date().getMonth(), 1) 
+    onSubmit(data);
+     if (!initialData) { // Resetar apenas se for um novo lançamento
+      form.reset({
+        description: "",
+        amount: 0,
+        category: defaultExpenseCategories[0],
+        date: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+        isInstallmentPurchase: false,
+        numberOfInstallments: undefined,
       });
     }
   };
+
+  const isEditingInstallment = !!initialData?.isInstallment;
+  const showNewInstallmentFields = !initialData; // Mostrar campos de parcelamento apenas para novas despesas
+  const isInstallmentPurchaseMode = form.watch("isInstallmentPurchase");
 
   return (
     <Card>
@@ -110,7 +141,13 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Valor</FormLabel>
+                    <FormLabel>
+                       {isEditingInstallment
+                        ? "Valor da Parcela"
+                        : isInstallmentPurchaseMode && showNewInstallmentFields
+                        ? "Valor Total da Compra"
+                        : "Valor"}
+                    </FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="0,00" {...field} />
                     </FormControl>
@@ -154,7 +191,7 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
               name="date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Mês/Ano</FormLabel>
+                  <FormLabel>Mês/Ano {isInstallmentPurchaseMode && showNewInstallmentFields ? "(Primeira Parcela)" : ""}</FormLabel>
                   <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -188,7 +225,7 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
                         }}
                         captionLayout="buttons"
                         fromYear={new Date().getFullYear() - 20}
-                        toYear={new Date().getFullYear() + 5}
+                        toYear={new Date().getFullYear() + 20} // Aumentado o range para o futuro
                         defaultMonth={field.value || new Date()}
                         locale={ptBR}
                       />
@@ -198,6 +235,46 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
                 </FormItem>
               )}
             />
+
+            {showNewInstallmentFields && (
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="isInstallmentPurchase"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          É uma compra parcelada?
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                {isInstallmentPurchaseMode && (
+                  <FormField
+                    control={form.control}
+                    name="numberOfInstallments"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Número de Parcelas</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="Ex: 12" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+            )}
+
             <div className="flex justify-end gap-2">
               {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>}
               <Button type="submit">

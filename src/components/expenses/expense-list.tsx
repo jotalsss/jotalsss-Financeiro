@@ -6,9 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Edit2, Trash2, CalendarDays, Info } from "lucide-react";
+import { Edit2, Trash2, CalendarDays, Info, Repeat } from "lucide-react";
 import { expenseCategoryIcons } from "./expense-categories";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface ExpenseListProps {
@@ -19,12 +19,18 @@ interface ExpenseListProps {
 
 export function ExpenseList({ expenseList, onEdit, onDelete }: ExpenseListProps) {
   const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(amount);
+  
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    // Adiciona o fuso horário para evitar problemas de "off-by-one" dia
-    const adjustedDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-    return format(adjustedDate, "MMMM yyyy", { locale: ptBR });
+    try {
+      // A data já está como o primeiro dia do mês, UTC.
+      const date = parseISO(dateString); // parseISO trata corretamente o Z (UTC)
+      return format(date, "MMMM yyyy", { locale: ptBR });
+    } catch (e) {
+      console.error("Erro ao formatar data:", dateString, e);
+      return "Data inválida";
+    }
   }
+
 
   if (expenseList.length === 0) {
      return (
@@ -52,7 +58,7 @@ export function ExpenseList({ expenseList, onEdit, onDelete }: ExpenseListProps)
     <Card className="mt-6">
       <CardHeader>
         <CardTitle>Lançamentos de Despesas</CardTitle>
-        <CardDescription>Uma lista das suas despesas registradas.</CardDescription>
+        <CardDescription>Uma lista das suas despesas registradas. As descrições já indicam se for uma parcela.</CardDescription>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px] w-full">
@@ -71,7 +77,10 @@ export function ExpenseList({ expenseList, onEdit, onDelete }: ExpenseListProps)
                 const CategoryIcon = expenseCategoryIcons[expense.category as ExpenseCategory] || Info;
                 return (
                   <TableRow key={expense.id}>
-                    <TableCell className="font-medium">{expense.description}</TableCell>
+                    <TableCell className="font-medium">
+                      {expense.isInstallment && <Repeat className="h-3 w-3 mr-1 inline-block text-muted-foreground" title="Despesa Parcelada"/>}
+                      {expense.description}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <CategoryIcon className="h-4 w-4 text-muted-foreground" />

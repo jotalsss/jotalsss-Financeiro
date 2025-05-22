@@ -1,3 +1,4 @@
+
 export interface Income {
   id: string;
   source: string;
@@ -9,8 +10,12 @@ export interface Expense {
   id: string;
   category: string;
   description: string;
-  amount: number;
+  amount: number; // Valor da despesa ou da parcela individual
   date: string; // ISO string
+  isInstallment?: boolean;
+  totalInstallments?: number;
+  currentInstallment?: number;
+  installmentPurchaseId?: string; // ID para agrupar parcelas da mesma compra
 }
 
 export interface Goal {

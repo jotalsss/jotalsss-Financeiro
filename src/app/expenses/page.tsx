@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/page-header";
-import { ExpenseForm } from "@/components/expenses/expense-form";
+import { ExpenseForm, type ExpenseFormValues } from "@/components/expenses/expense-form";
 import { ExpenseList } from "@/components/expenses/expense-list";
 import { useFinancialData } from "@/hooks/use-financial-data";
 import type { Expense } from "@/lib/types";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, TrendingDown } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/common/delete-confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { addMonths, startOfMonth } from "date-fns";
 
 export default function ExpensesPage() {
   const { expenseList, addExpense, updateExpense, deleteExpense } = useFinancialData();
@@ -23,16 +25,54 @@ export default function ExpensesPage() {
     setIsClient(true);
   }, []);
 
-  const handleFormSubmit = (data: Omit<Expense, "id">) => {
+  const handleFormSubmit = (data: ExpenseFormValues) => {
     if (editingExpense) {
-      updateExpense({ ...data, id: editingExpense.id });
+      // Editando uma despesa/parcela existente
+      const expenseToUpdate: Expense = {
+        ...editingExpense, // Preserva campos de parcelamento originais se for uma parcela
+        description: data.description,
+        amount: data.amount, // O valor da parcela/despesa individual
+        category: data.category,
+        date: data.date.toISOString(),
+      };
+      updateExpense(expenseToUpdate);
       toast({ title: "Despesa Atualizada", description: `A despesa "${data.description}" foi atualizada.` });
+    } else if (data.isInstallmentPurchase && data.numberOfInstallments && data.numberOfInstallments >= 2) {
+      // Nova compra parcelada
+      const purchaseId = crypto.randomUUID();
+      // data.amount aqui é o valor TOTAL da compra
+      const installmentAmount = parseFloat((data.amount / data.numberOfInstallments).toFixed(2));
+      const firstInstallmentDate = startOfMonth(data.date);
+
+      for (let i = 0; i < data.numberOfInstallments; i++) {
+        const installmentDate = addMonths(firstInstallmentDate, i);
+        const newInstallment: Omit<Expense, "id"> = {
+          description: `${data.description} (Parcela ${i + 1} de ${data.numberOfInstallments})`,
+          amount: installmentAmount,
+          category: data.category,
+          date: installmentDate.toISOString(),
+          isInstallment: true,
+          totalInstallments: data.numberOfInstallments,
+          currentInstallment: i + 1,
+          installmentPurchaseId: purchaseId,
+        };
+        addExpense(newInstallment);
+      }
+      toast({ title: "Compra Parcelada Adicionada", description: `As ${data.numberOfInstallments} parcelas de "${data.description}" foram adicionadas.` });
     } else {
-      addExpense(data);
+      // Nova despesa única
+      addExpense({
+        description: data.description,
+        amount: data.amount,
+        category: data.category,
+        date: data.date.toISOString(),
+      });
       toast({ title: "Despesa Adicionada", description: `A despesa "${data.description}" foi adicionada.` });
     }
+    
     setEditingExpense(null);
     setIsFormVisible(false);
+    // O reset do formulário é feito dentro do ExpenseForm se for uma nova entrada
   };
 
   const handleEdit = (expense: Expense) => {
@@ -74,7 +114,7 @@ export default function ExpensesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Despesas"
-        description="Registre e categorize todos os seus gastos."
+        description="Registre e categorize todos os seus gastos, incluindo compras parceladas."
         icon={TrendingDown}
         action={
           !isFormVisible && (
@@ -94,7 +134,7 @@ export default function ExpensesPage() {
       )}
 
       <ExpenseList
-        expenseList={expenseList}
+        expenseList={expenseList.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())} // Ordena por data mais recente
         onEdit={handleEdit}
         onDelete={(id) => {
           const expenseItem = expenseList.find(e => e.id === id);
