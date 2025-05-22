@@ -18,18 +18,17 @@ import { Separator } from "@/components/ui/separator";
 import { Coins, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePathname } from "next/navigation";
+import { PageTransitionWrapper } from "@/components/common/page-transition-wrapper"; // Importar
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { currentUser, logout, isLoading: authIsLoading } = useAuth();
   const pathname = usePathname();
 
-  // Se estiver carregando ou não houver usuário, ou estiver em rotas públicas, não renderizar o layout principal.
-  // O AuthProvider e as páginas de login/registro já mostram seus próprios Loaders.
   if (authIsLoading || !currentUser || pathname === '/login' || pathname === '/register') {
     return <>{children}</>; 
   }
 
-  const userDisplayName = currentUser?.email || "Usuário"; // Mostrar e-mail ou um placeholder
+  const userDisplayName = currentUser?.email || "Usuário"; 
 
   return (
     <SidebarProvider defaultOpen>
@@ -87,7 +86,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Button>
           )}
         </header>
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-6">
+          <PageTransitionWrapper> {/* Envolver o children */}
+            {children}
+          </PageTransitionWrapper>
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -2,26 +2,31 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Scale } from "lucide-react"; // Removed DollarSign as it's not used
+import { TrendingUp, TrendingDown, Scale, type LucideIcon } from "lucide-react";
 import { useFinancialData } from "@/hooks/use-financial-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState, useMemo } from "react";
-import type { LucideIcon } from "lucide-react"; // For explicit typing
+import { motion } from "framer-motion";
 
 const StatCard = ({ title, value, icon: IconComponent, colorClass, isLoading }: { title: string; value: string; icon: LucideIcon; colorClass: string; isLoading?: boolean }) => (
-  <Card>
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      {IconComponent && <IconComponent className={`h-5 w-5 ${colorClass}`} />}
-    </CardHeader>
-    <CardContent>
-      {isLoading ? (
-        <Skeleton className="h-8 w-3/4" />
-      ) : (
-        <div className="text-2xl font-bold">{value}</div>
-      )}
-    </CardContent>
-  </Card>
+  <motion.div
+    whileHover={{ scale: 1.03, y: -2 }}
+    transition={{ type: "spring", stiffness: 300, damping: 15 }}
+  >
+    <Card className="transition-shadow duration-200 ease-in-out hover:shadow-xl">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {IconComponent && <IconComponent className={`h-5 w-5 ${colorClass}`} />}
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <Skeleton className="h-8 w-3/4" />
+        ) : (
+          <div className="text-2xl font-bold">{value}</div>
+        )}
+      </CardContent>
+    </Card>
+  </motion.div>
 );
 
 interface FinancialOverviewProps {
