@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
@@ -9,8 +10,16 @@ import { generateFinancialTips, type FinancialTipsInput } from "@/ai/flows/gener
 import { useFinancialData } from "@/hooks/use-financial-data";
 import { useToast } from "@/hooks/use-toast";
 import type { Expense } from "@/lib/types";
+import { getMonth, getYear, format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-export function AiInsights() {
+
+interface AiInsightsProps {
+  selectedMonth?: number;
+  selectedYear?: number;
+}
+
+export function AiInsights({ selectedMonth, selectedYear }: AiInsightsProps) {
   const { incomeList, expenseList, goalList, getTotalIncome } = useFinancialData();
   const [insights, setInsights] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,9 +31,27 @@ export function AiInsights() {
     setIsClient(true);
   }, []);
 
+  const monthYearFilter = useMemo(() => {
+    if (typeof selectedMonth === 'number' && typeof selectedYear === 'number') {
+      return { month: selectedMonth, year: selectedYear };
+    }
+    return undefined; // Para insights gerais se nenhum mês for selecionado
+  }, [selectedMonth, selectedYear]);
+
   const aggregatedExpenses = useMemo(() => {
     if (!isClient) return [];
-    return expenseList.reduce((acc, expense) => {
+    let expensesToConsider = expenseList;
+    if (monthYearFilter) {
+      expensesToConsider = expenseList.filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return getMonth(expenseDate) === monthYearFilter.month && getYear(expenseDate) === monthYearFilter.year;
+      });
+    }
+    // Se não houver filtro, considera todas as despesas (para um resumo geral, se aplicável)
+    // Mas para este caso, se monthYearFilter estiver definido, filtramos. Caso contrário, poderíamos mostrar insights gerais.
+    // Para ser consistente com o painel, vamos focar em dados mensais se o filtro existir.
+
+    return expensesToConsider.reduce((acc, expense) => {
       const existingCategory = acc.find(e => e.category === expense.category);
       if (existingCategory) {
         existingCategory.amount += expense.amount;
@@ -33,17 +60,17 @@ export function AiInsights() {
       }
       return acc;
     }, [] as { category: string; amount: number }[]);
-  }, [expenseList, isClient]);
+  }, [expenseList, isClient, monthYearFilter]);
 
   const financialGoalsString = useMemo(() => {
     if (!isClient) return "";
     return goalList.map(g => `${g.name} (Meta: R$${g.targetAmount.toFixed(2)})`).join(", ") || "Nenhuma meta específica definida ainda.";
   }, [goalList, isClient]);
 
-  const currentTotalIncome = useMemo(() => {
+  const currentTotalIncomeForPeriod = useMemo(() => {
     if (!isClient) return 0;
-    return getTotalIncome();
-  }, [getTotalIncome, isClient]);
+    return getTotalIncome(monthYearFilter); // Usa o filtro (pode ser undefined)
+  }, [getTotalIncome, isClient, monthYearFilter]);
 
 
   const handleGenerateInsights = useCallback(async () => {
@@ -53,8 +80,17 @@ export function AiInsights() {
     setError(null);
     setInsights(null);
 
-    if (currentTotalIncome === 0 && aggregatedExpenses.length === 0) {
+    if (monthYearFilter && currentTotalIncomeForPeriod === 0 && aggregatedExpenses.length === 0) {
       toast({
+        title: "Dados Insuficientes para o Mês",
+        description: "Por favor, adicione algumas receitas e despesas para este mês para gerar insights.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+     if (!monthYearFilter && currentTotalIncomeForPeriod === 0 && aggregatedExpenses.length === 0 && incomeList.length === 0 && expenseList.length === 0) {
+       toast({
         title: "Dados Insuficientes",
         description: "Por favor, adicione algumas receitas e despesas para gerar insights.",
         variant: "destructive",
@@ -63,8 +99,9 @@ export function AiInsights() {
       return;
     }
 
+
     const input: FinancialTipsInput = {
-      income: currentTotalIncome,
+      income: currentTotalIncomeForPeriod,
       expenses: aggregatedExpenses,
       financialGoals: financialGoalsString,
     };
@@ -73,7 +110,7 @@ export function AiInsights() {
       const result = await generateFinancialTips(input);
       setInsights(result.tips);
       toast({
-        title: "Insights Gerados",
+        title: `Insights Gerados ${monthYearFilter ? `para ${format(new Date(monthYearFilter.year, monthYearFilter.month), "MMMM yyyy", { locale: ptBR })}` : ''}`,
         description: "Suas dicas financeiras personalizadas estão prontas!",
       });
     } catch (e) {
@@ -87,7 +124,10 @@ export function AiInsights() {
     } finally {
       setIsLoading(false);
     }
-  }, [isClient, currentTotalIncome, aggregatedExpenses, financialGoalsString, toast]);
+  }, [isClient, currentTotalIncomeForPeriod, aggregatedExpenses, financialGoalsString, toast, monthYearFilter, incomeList, expenseList]);
+
+  const monthDisplay = monthYearFilter ? format(new Date(monthYearFilter.year, monthYearFilter.month), "MMMM yyyy", { locale: ptBR }) : null;
+
 
   if (!isClient) {
     return (
@@ -102,7 +142,7 @@ export function AiInsights() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-24 animate-pulse rounded-md bg-muted"></div>
+          <Skeleton className="h-40 rounded-md" />
         </CardContent>
         <CardFooter>
            <Button disabled className="w-full">
@@ -123,7 +163,7 @@ export function AiInsights() {
           Insights Financeiros com IA
         </CardTitle>
         <CardDescription>
-          Receba dicas personalizadas com base em suas receitas, despesas e metas.
+          Receba dicas personalizadas com base em suas receitas, despesas e metas {monthDisplay ? `de ${monthDisplay}` : 'gerais'}.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -145,7 +185,7 @@ export function AiInsights() {
           <div className="flex h-40 flex-col items-center justify-center rounded-md border border-dashed bg-muted/30 p-4 text-center">
             <Sparkles className="h-10 w-10 text-muted-foreground/50" />
             <p className="mt-2 text-sm text-muted-foreground">
-              Clique no botão abaixo para gerar suas dicas financeiras personalizadas.
+              Clique no botão abaixo para gerar suas dicas financeiras personalizadas {monthDisplay ? `para ${monthDisplay}` : ''}.
             </p>
           </div>
         )}
@@ -169,7 +209,7 @@ export function AiInsights() {
           ) : (
             <Sparkles className="mr-2 h-4 w-4" />
           )}
-          {insights ? "Gerar Novos Insights" : "Gerar Insights"}
+          {insights ? `Gerar Novos Insights ${monthDisplay ? `para ${monthDisplay}` : ''}` : `Gerar Insights ${monthDisplay ? `para ${monthDisplay}` : ''}`}
         </Button>
       </CardFooter>
     </Card>

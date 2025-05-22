@@ -3,26 +3,28 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, ChevronLeft, ChevronRight } from "lucide-react";
+import { Activity } from "lucide-react";
 import { useFinancialData } from "@/hooks/use-financial-data";
 import {
   ChartContainer,
   ChartTooltipContent,
   type ChartConfig
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"; // Removido ChartLegend e ChartLegendContent pois não são usados
-import { Button } from "@/components/ui/button";
-import { format, getYear, getMonth, subMonths, addMonths, startOfMonth } from 'date-fns';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { format, getYear, getMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface MonthlyExpenseData {
-  name: string; // Descrição da despesa
-  value: number; // Valor da despesa
+  name: string; 
+  value: number; 
 }
 
-export function MonthlyCategoryExpenseChart() { 
+interface MonthlyExpensesDetailChartProps {
+  currentDate: Date; 
+}
+
+export function MonthlyCategoryExpenseChart({ currentDate }: MonthlyExpensesDetailChartProps) { 
   const { expenseList } = useFinancialData();
-  const [currentDate, setCurrentDate] = useState(startOfMonth(new Date()));
   const [chartData, setChartData] = useState<MonthlyExpenseData[]>([]);
   const [isClient, setIsClient] = useState(false);
 
@@ -53,14 +55,6 @@ export function MonthlyCategoryExpenseChart() {
     setChartData(formattedChartData);
   }, [expenseList, selectedMonthYear, isClient]);
 
-  const handlePreviousMonth = () => {
-    setCurrentDate(prevDate => startOfMonth(subMonths(prevDate, 1)));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentDate(prevDate => startOfMonth(addMonths(prevDate, 1)));
-  };
-
   const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
   const chartConfig = useMemo(() => {
@@ -73,26 +67,21 @@ export function MonthlyCategoryExpenseChart() {
     } satisfies ChartConfig;
   }, [isClient]);
 
+  const monthYearDisplay = format(currentDate, "MMMM yyyy", { locale: ptBR });
+
   if (!isClient) {
     return (
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
              <div>
                 <CardTitle className="flex items-center gap-2">
                 <Activity className="h-6 w-6 text-primary" />
-                Despesas do Mês
+                Despesas Detalhadas do Mês
                 </CardTitle>
-                <CardDescription>Detalhes das suas despesas para o mês selecionado.</CardDescription>
+                <CardDescription>Carregando detalhes das suas despesas para {monthYearDisplay}.</CardDescription>
              </div>
-             <div className="flex items-center gap-2 animate-pulse">
-                <Button variant="outline" size="icon" disabled><ChevronLeft className="h-4 w-4" /></Button>
-                <div className="h-6 w-32 rounded-md bg-muted"></div>
-                <Button variant="outline" size="icon" disabled><ChevronRight className="h-4 w-4" /></Button>
-             </div>
-          </div>
         </CardHeader>
-        <CardContent className="h-[350px] animate-pulse rounded-md bg-muted flex items-center justify-center">
+        <CardContent className="h-[450px] animate-pulse rounded-md bg-muted flex items-center justify-center">
            <Activity className="h-12 w-12 text-muted-foreground/30 animate-spin" />
         </CardContent>
       </Card>
@@ -109,26 +98,13 @@ export function MonthlyCategoryExpenseChart() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
+        <div>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-6 w-6 text-primary" />
-              Despesas do Mês
+              Despesas Detalhadas de {monthYearDisplay}
             </CardTitle>
-            <CardDescription>Detalhes das suas despesas para o mês selecionado.</CardDescription>
+            <CardDescription>Lista de todas as despesas registradas para este mês.</CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={handlePreviousMonth} aria-label="Mês anterior">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium w-32 text-center tabular-nums">
-              {format(currentDate, "MMMM yyyy", { locale: ptBR })}
-            </span>
-            <Button variant="outline" size="icon" onClick={handleNextMonth} aria-label="Próximo mês">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
       </CardHeader>
       <CardContent className="h-[450px] flex items-center justify-center pr-4">
         {chartData.length > 0 ? (
@@ -164,7 +140,7 @@ export function MonthlyCategoryExpenseChart() {
           </ChartContainer>
         ) : (
           <p className="text-muted-foreground text-center">
-            Nenhuma despesa registrada para {format(currentDate, "MMMM yyyy", { locale: ptBR })}.
+            Nenhuma despesa registrada para {monthYearDisplay}.
           </p>
         )}
       </CardContent>

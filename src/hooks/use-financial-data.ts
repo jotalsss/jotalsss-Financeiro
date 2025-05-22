@@ -3,10 +3,10 @@
 
 import type { Income, Expense, Goal } from "@/lib/types";
 import { useState, useEffect, useCallback } from "react";
+import { getMonth, getYear } from "date-fns"; // Importado para filtragem
 
 function useLocalStorageState<T>(key: string, defaultValue: T) {
   const [state, setState] = useState<T>(() => {
-    // Lazy initializer: runs only on initial mount
     if (typeof window === 'undefined') {
       return defaultValue;
     }
@@ -21,7 +21,6 @@ function useLocalStorageState<T>(key: string, defaultValue: T) {
     return defaultValue;
   });
 
-  // Effect to save state to localStorage when it changes
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
@@ -77,12 +76,26 @@ export function useFinancialData() {
     setGoalList((prev) => prev.filter((g) => g.id !== id));
   }, [setGoalList]);
   
-  const getTotalIncome = useCallback(() => {
-    return incomeList.reduce((sum, income) => sum + income.amount, 0);
+  const getTotalIncome = useCallback((filter?: { month: number; year: number }) => {
+    let incomesToConsider = incomeList;
+    if (filter && typeof filter.month === 'number' && typeof filter.year === 'number') {
+      incomesToConsider = incomeList.filter(income => {
+        const incomeDate = new Date(income.date);
+        return getMonth(incomeDate) === filter.month && getYear(incomeDate) === filter.year;
+      });
+    }
+    return incomesToConsider.reduce((sum, income) => sum + income.amount, 0);
   }, [incomeList]);
 
-  const getTotalExpenses = useCallback(() => {
-    return expenseList.reduce((sum, expense) => sum + expense.amount, 0);
+  const getTotalExpenses = useCallback((filter?: { month: number; year: number }) => {
+    let expensesToConsider = expenseList;
+    if (filter && typeof filter.month === 'number' && typeof filter.year === 'number') {
+      expensesToConsider = expenseList.filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return getMonth(expenseDate) === filter.month && getYear(expenseDate) === filter.year;
+      });
+    }
+    return expensesToConsider.reduce((sum, expense) => sum + expense.amount, 0);
   }, [expenseList]);
 
   return {

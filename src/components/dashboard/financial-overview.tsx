@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingUp, TrendingDown, Scale } from "lucide-react";
 import { useFinancialData } from "@/hooks/use-financial-data";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 const StatCard = ({ title, value, icon: Icon, colorClass, isLoading }: { title: string; value: string; icon: React.ElementType; colorClass: string; isLoading?: boolean }) => (
   <Card>
@@ -23,21 +23,35 @@ const StatCard = ({ title, value, icon: Icon, colorClass, isLoading }: { title: 
   </Card>
 );
 
-export function FinancialOverview() {
+interface FinancialOverviewProps {
+  selectedMonth?: number;
+  selectedYear?: number;
+  isLoading?: boolean; 
+}
+
+export function FinancialOverview({ selectedMonth, selectedYear, isLoading: pageIsLoading }: FinancialOverviewProps) {
   const { getTotalIncome, getTotalExpenses } = useFinancialData();
-  const [totalIncome, setTotalIncome] = useState(0);
-  const [totalExpenses, setTotalExpenses] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
+  const financialData = useMemo(() => {
+    if (!isClient) return { totalIncome: 0, totalExpenses: 0, isLoadingInternal: true };
+    
+    const filter = (typeof selectedMonth === 'number' && typeof selectedYear === 'number')
+      ? { month: selectedMonth, year: selectedYear }
+      : undefined; // Se não houver filtro, calcula o total geral (ou poderia ser um erro/estado vazio)
+
+    const income = getTotalIncome(filter);
+    const expenses = getTotalExpenses(filter);
+    return { totalIncome: income, totalExpenses: expenses, isLoadingInternal: false };
+  }, [isClient, selectedMonth, selectedYear, getTotalIncome, getTotalExpenses]);
 
   useEffect(() => {
-    // Simulate loading and ensure data is ready client-side
-    const income = getTotalIncome();
-    const expenses = getTotalExpenses();
-    setTotalIncome(income);
-    setTotalExpenses(expenses);
-    setIsLoading(false);
-  }, [getTotalIncome, getTotalExpenses]);
+    setIsClient(true);
+  }, []);
   
+  const { totalIncome, totalExpenses, isLoadingInternal } = financialData;
+  const finalIsLoading = pageIsLoading || !isClient || isLoadingInternal;
+
   const netBalance = totalIncome - totalExpenses;
 
   const formatCurrency = (amount: number) => {
@@ -47,27 +61,26 @@ export function FinancialOverview() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <StatCard
-        title="Total de Receitas"
+        title="Receitas do Mês"
         value={formatCurrency(totalIncome)}
         icon={TrendingUp}
         colorClass="text-green-500"
-        isLoading={isLoading}
+        isLoading={finalIsLoading}
       />
       <StatCard
-        title="Total de Despesas"
+        title="Despesas do Mês"
         value={formatCurrency(totalExpenses)}
         icon={TrendingDown}
         colorClass="text-red-500"
-        isLoading={isLoading}
+        isLoading={finalIsLoading}
       />
       <StatCard
-        title="Saldo Líquido"
+        title="Saldo do Mês"
         value={formatCurrency(netBalance)}
         icon={Scale}
         colorClass={netBalance >= 0 ? "text-blue-500" : "text-orange-500"}
-        isLoading={isLoading}
+        isLoading={finalIsLoading}
       />
     </div>
   );
 }
-
