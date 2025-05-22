@@ -8,13 +8,11 @@ import { useFinancialData } from "@/hooks/use-financial-data";
 import {
   ChartContainer,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
   type ChartConfig
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"; // Removido ChartLegend e ChartLegendContent pois não são usados
 import { Button } from "@/components/ui/button";
-import { format, getYear, getMonth, subMonths, addMonths, startOfMonth, isSameMonth, isSameYear } from 'date-fns';
+import { format, getYear, getMonth, subMonths, addMonths, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface MonthlyExpenseData {
@@ -22,7 +20,7 @@ interface MonthlyExpenseData {
   value: number; // Valor da despesa
 }
 
-export function MonthlyCategoryExpenseChart() { // Mantendo o nome da função/exportação para evitar quebra de importação, mas a funcionalidade mudou.
+export function MonthlyCategoryExpenseChart() { 
   const { expenseList } = useFinancialData();
   const [currentDate, setCurrentDate] = useState(startOfMonth(new Date()));
   const [chartData, setChartData] = useState<MonthlyExpenseData[]>([]);
@@ -50,7 +48,7 @@ export function MonthlyCategoryExpenseChart() { // Mantendo o nome da função/e
         name: expense.description,
         value: expense.amount,
       }))
-      .sort((a, b) => a.value - b.value); // Ordena para melhor visualização no gráfico de barras horizontal
+      .sort((a, b) => a.value - b.value); 
 
     setChartData(formattedChartData);
   }, [expenseList, selectedMonthYear, isClient]);
@@ -101,10 +99,8 @@ export function MonthlyCategoryExpenseChart() { // Mantendo o nome da função/e
     );
   }
 
-  const isCurrentMonthOrFuture = (isSameMonth(currentDate, new Date()) && isSameYear(currentDate, new Date())) || currentDate > new Date();
-
   const yAxisTickFormatter = (value: string) => {
-    if (value.length > 20) { // Trunca descrições longas
+    if (value.length > 20) { 
       return `${value.substring(0, 20)}...`;
     }
     return value;
@@ -128,27 +124,27 @@ export function MonthlyCategoryExpenseChart() { // Mantendo o nome da função/e
             <span className="text-sm font-medium w-32 text-center tabular-nums">
               {format(currentDate, "MMMM yyyy", { locale: ptBR })}
             </span>
-            <Button variant="outline" size="icon" onClick={handleNextMonth} disabled={isCurrentMonthOrFuture} aria-label="Próximo mês">
+            <Button variant="outline" size="icon" onClick={handleNextMonth} aria-label="Próximo mês">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="h-[450px] flex items-center justify-center pr-4"> {/* Aumentei a altura e adicionei padding à direita */}
+      <CardContent className="h-[450px] flex items-center justify-center pr-4">
         {chartData.length > 0 ? (
           <ChartContainer config={chartConfig} className="w-full h-full">
             <BarChart
               layout="vertical"
               data={chartData}
-              margin={{ top: 5, right: 10, left: 10, bottom: 5 }} // Ajuste de margens
+              margin={{ top: 5, right: 10, left: 10, bottom: 5 }} 
             >
               <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false}/>
               <XAxis type="number" tickFormatter={formatCurrency} stroke="hsl(var(--muted-foreground))" />
               <YAxis 
                 type="category" 
                 dataKey="name" 
-                width={180} // Aumentar width para descrições
-                interval={0} // Mostrar todos os ticks
+                width={180} 
+                interval={0} 
                 tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
                 tickFormatter={yAxisTickFormatter}
               />
