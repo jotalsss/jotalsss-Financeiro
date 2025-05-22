@@ -3,13 +3,16 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
+import { Skeleton } from '@/components/ui/skeleton';
+import { addUser, findUserByUsername, verifyPassword } from '@/lib/auth-utils'; // Importar novas funções
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType {
   currentUser: string | null;
-  login: (username: string) => void;
+  login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>; // Modificado
   logout: () => void;
-  isLoading: boolean; // Renomeado de authLoading para isLoading para clareza
+  register: (username: string, password: string) => Promise<{ success: boolean; message?: string }>; // Novo
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,10 +31,11 @@ function LoadingScreen() {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
-  const [initialLoading, setInitialLoading] = useState(true); // Para o carregamento inicial do localStorage
-  const [authChecked, setAuthChecked] = useState(false); // Para saber se a lógica de rota foi executada
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast();
 
   useEffect(() => {
     const storedUser = localStorage.getItem('realwise_currentUser');
@@ -42,37 +46,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!initialLoading) { // Só executa após o carregamento do localStorage
-      if (currentUser && pathname === '/login') {
+    if (!initialLoading) {
+      const publicPaths = ['/login', '/register'];
+      const isPublicPath = publicPaths.includes(pathname);
+
+      if (currentUser && isPublicPath) {
         router.push('/');
-      } else if (!currentUser && pathname !== '/login') {
-        // Permite acesso a rotas de API ou assets públicos sem redirecionar
+      } else if (!currentUser && !isPublicPath) {
         if (!pathname.startsWith('/api/') && !pathname.startsWith('/_next/')) {
-           router.push('/login');
+          router.push('/login');
         }
       }
       setAuthChecked(true);
     }
   }, [currentUser, pathname, router, initialLoading]);
 
-  const login = (username: string) => {
-    localStorage.setItem('realwise_currentUser', username);
-    setCurrentUser(username);
-    // O useEffect acima cuidará do redirecionamento
+  const login = async (username: string, password: string): Promise<{ success: boolean; message?: string }> => {
+    const user = findUserByUsername(username);
+    if (!user) {
+      return { success: false, message: "Usuário não encontrado." };
+    }
+    if (!verifyPassword(password, user.hashedPassword)) {
+      return { success: false, message: "Senha incorreta." };
+    }
+    localStorage.setItem('realwise_currentUser', user.username);
+    setCurrentUser(user.username);
+    return { success: true };
   };
 
   const logout = () => {
     localStorage.removeItem('realwise_currentUser');
     setCurrentUser(null);
-    // O useEffect acima cuidará do redirecionamento para /login
+    router.push('/login'); // Garante o redirecionamento imediato
   };
 
-  if (!authChecked) {
+  const register = async (username: string, password: string): Promise<{ success: boolean; message?: string }> => {
+    const result = addUser(username, password);
+    if (result.success) {
+      // Auto-login após registro bem-sucedido
+      localStorage.setItem('realwise_currentUser', username);
+      setCurrentUser(username);
+      return { success: true };
+    }
+    return result; // Retorna { success: false, message: ... }
+  };
+
+  if (!authChecked && !initialLoading) { // Pequena correção na condição para evitar piscar o loading screen desnecessariamente
+     // Se não checou a autenticação E não está no carregamento inicial, mostra o LoadingScreen
+     // Isso ajuda a cobrir o momento entre o fim do initialLoading e o authChecked se tornar true
+     return <LoadingScreen />;
+  }
+  if (initialLoading) { // Se ainda está carregando o usuário do localStorage
     return <LoadingScreen />;
   }
 
+
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout, isLoading: initialLoading || !authChecked }}>
+    <AuthContext.Provider value={{ currentUser, login, logout, register, isLoading: initialLoading || !authChecked }}>
       {children}
     </AuthContext.Provider>
   );

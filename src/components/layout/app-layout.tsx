@@ -20,13 +20,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePathname } from "next/navigation";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, isLoading: authIsLoading } = useAuth(); // Adicionado isLoading
   const pathname = usePathname();
 
-  // Se não houver usuário ou estiver na página de login, não renderizar o layout principal
-  // A lógica de redirecionamento já está no AuthProvider
-  if (!currentUser || pathname === '/login') {
-    return <>{children}</>; // Renderiza apenas os filhos (ex: LoginPage)
+  // Se estiver carregando ou não houver usuário, ou estiver em rotas públicas, não renderizar o layout principal.
+  // O AuthProvider e as páginas de login/registro já mostram seus próprios Loaders.
+  if (authIsLoading || !currentUser || pathname === '/login' || pathname === '/register') {
+    return <>{children}</>; 
   }
 
   return (

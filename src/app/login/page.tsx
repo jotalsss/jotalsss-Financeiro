@@ -1,6 +1,7 @@
 
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,31 +21,37 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authIsLoading && currentUser) {
-      router.push('/'); // Redireciona se já estiver logado
+      router.push('/');
     }
   }, [currentUser, authIsLoading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    if (username.trim()) {
-      // Simula um pequeno delay para o login
-      await new Promise(resolve => setTimeout(resolve, 500));
-      login(username.trim());
-      // O redirecionamento é tratado pelo AuthProvider
-    } else {
+    if (!username.trim() || !password.trim()) {
       toast({
-        title: "Erro de Login",
-        description: "Por favor, insira um nome de usuário.",
+        title: "Campos Obrigatórios",
+        description: "Por favor, insira o nome de usuário e a senha.",
         variant: "destructive",
       });
       setIsSubmitting(false);
+      return;
     }
+
+    const result = await login(username.trim(), password);
+    
+    if (result.success) {
+      // O redirecionamento é tratado pelo AuthProvider/useEffect
+    } else {
+      toast({
+        title: "Erro de Login",
+        description: result.message || "Não foi possível fazer login. Verifique suas credenciais.",
+        variant: "destructive",
+      });
+    }
+    setIsSubmitting(false);
   };
   
-  // Se ainda está carregando o estado de autenticação ou se já está logado, não mostra o form.
-  // O AuthProvider já mostra um LoadingScreen se authChecked for false.
-  // Este useEffect lida com o caso de já estar logado.
   if (authIsLoading || (!authIsLoading && currentUser)) {
     return (
       <div className="flex h-screen items-center justify-center bg-background p-4">
@@ -59,7 +66,7 @@ export default function LoginPage() {
         <CardHeader className="items-center text-center">
            <Coins className="h-12 w-12 text-primary mb-4" />
           <CardTitle className="text-3xl font-bold">Bem-vindo ao RealWise!</CardTitle>
-          <CardDescription className="text-base">Entre com seu nome de usuário para organizar suas finanças.</CardDescription>
+          <CardDescription className="text-base">Entre com seu nome de usuário e senha.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-6">
@@ -87,14 +94,19 @@ export default function LoginPage() {
                 required
                 disabled={isSubmitting}
               />
-               <p className="text-xs text-muted-foreground pt-1">Nota: Para este protótipo, qualquer senha é válida.</p>
             </div>
             <Button type="submit" className="w-full text-lg py-6" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Entrar"}
             </Button>
           </form>
         </CardContent>
-         <CardFooter className="flex-col items-center text-center text-xs text-muted-foreground pt-6">
+         <CardFooter className="flex-col items-center text-center text-xs text-muted-foreground pt-6 space-y-2">
+            <p>
+              Não tem uma conta?{" "}
+              <Button variant="link" asChild className="p-0 h-auto">
+                <Link href="/register">Registre-se</Link>
+              </Button>
+            </p>
             <p>© {new Date().getFullYear()} RealWise</p>
             <p className="mt-1">Simples e direto ao ponto para suas finanças.</p>
          </CardFooter>
