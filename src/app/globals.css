@@ -2,102 +2,104 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Removida a regra conflitante:
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
+*/
 
 @layer base {
   :root {
-    --background: 80 56% 96%; /* Light Green #F1F8E9 */
-    --foreground: 240 10% 3.9%; /* Darker for readability on light green */
+    --background: 220 20% 97%; /* Azul muito claro / Cinza azulado */
+    --foreground: 220 10% 20%; /* Cinza escuro azulado */
 
-    --card: 80 56% 100%; /* Slightly lighter than background or white */
-    --card-foreground: 240 10% 3.9%;
+    --card: 0 0% 100%; /* Branco */
+    --card-foreground: 220 10% 20%; /* Cinza escuro azulado */
 
-    --popover: 80 56% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%; /* Branco */
+    --popover-foreground: 220 10% 20%; /* Cinza escuro azulado */
 
-    --primary: 120 39% 49%; /* Forest Green #4CAF50 */
-    --primary-foreground: 60 90% 98%; /* Light color for contrast on Forest Green */
+    --primary: 210 70% 55%; /* Azul médio */
+    --primary-foreground: 0 0% 100%; /* Branco */
 
-    --secondary: 120 20% 80%; /* Lighter shade of primary or neutral */
-    --secondary-foreground: 120 39% 30%; /* Darker shade for contrast */
+    --secondary: 210 40% 93%; /* Azul claro acinzentado */
+    --secondary-foreground: 210 40% 30%; /* Azul escuro acinzentado para contraste */
 
-    --muted: 120 15% 90%; /* Muted shade */
-    --muted-foreground: 120 10% 45%;
+    --muted: 210 30% 90%; /* Tom suave de azul/cinza */
+    --muted-foreground: 210 20% 45%; /* Cinza azulado mais escuro */
 
-    --accent: 54 98% 61%; /* Soft Yellow #FFEB3B */
-    --accent-foreground: 54 90% 20%; /* Dark color for contrast on Soft Yellow */
+    --accent: 45 90% 60%; /* Amarelo suave / Dourado */
+    --accent-foreground: 45 90% 25%; /* Marrom escuro para contraste com amarelo */
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 75% 55%; /* Vermelho um pouco menos saturado */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 120 20% 85%; /* Border color related to primary/background */
-    --input: 120 20% 90%; /* Input background */
-    --ring: 120 39% 55%; /* Ring color related to primary */
+    --border: 210 20% 88%; /* Cinza azulado claro para bordas */
+    --input: 210 30% 96%; /* Fundo do input um pouco mais claro que o background */
+    --ring: 210 70% 60%; /* Cor do anel de foco, relacionada ao primário */
 
-    --chart-1: 120 39% 49%;
-    --chart-2: 54 98% 61%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 210 70% 55%; /* Azul primário */
+    --chart-2: 45 90% 60%;  /* Amarelo accent */
+    --chart-3: 180 50% 50%; /* Teal/Ciano */
+    --chart-4: 250 60% 65%; /* Roxo suave */
+    --chart-5: 30 80% 60%;  /* Laranja suave */
     --radius: 0.5rem;
 
     /* Sidebar specific theme variables */
-    --sidebar-background: 120 30% 92%; /* Slightly different shade of light green or a muted primary */
-    --sidebar-foreground: 120 39% 25%; /* Darker green for text */
-    --sidebar-primary: 120 39% 49%; /* Forest Green */
-    --sidebar-primary-foreground: 60 90% 98%;
-    --sidebar-accent: 120 39% 80%; /* Lighter green for hover/active states */
-    --sidebar-accent-foreground: 120 39% 25%;
-    --sidebar-border: 120 30% 80%;
-    --sidebar-ring: 120 39% 55%;
+    --sidebar-background: 215 35% 94%; /* Tom de azul/cinza ligeiramente diferente para o sidebar */
+    --sidebar-foreground: 215 25% 25%; /* Texto mais escuro no sidebar */
+    --sidebar-primary: 210 70% 50%; /* Primário um pouco mais escuro para o sidebar */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 50% 88%; /* Hover no sidebar mais claro */
+    --sidebar-accent-foreground: 210 60% 30%;
+    --sidebar-border: 215 25% 85%;
+    --sidebar-ring: 210 70% 55%;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 220 15% 10%; /* Azul muito escuro / Cinza azulado escuro */
+    --foreground: 210 20% 95%; /* Texto claro quase branco */
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 220 15% 15%; /* Card um pouco mais claro que o fundo escuro */
+    --card-foreground: 210 20% 95%;
 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 15% 12%; /* Popover um pouco mais escuro */
+    --popover-foreground: 210 20% 95%;
 
-    --primary: 120 39% 55%; /* Brighter Forest Green for dark mode */
-    --primary-foreground: 120 20% 10%;
+    --primary: 210 75% 65%; /* Azul médio mais brilhante para dark mode */
+    --primary-foreground: 220 10% 10%; /* Texto escuro para contraste com primário brilhante */
 
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 220 15% 25%; /* Azul acinzentado escuro */
+    --secondary-foreground: 210 20% 90%; /* Texto claro para secundário escuro */
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 0 0% 63.9%;
+    --muted: 220 15% 22%; /* Tom escuro suave */
+    --muted-foreground: 210 20% 65%; /* Cinza claro */
 
-    --accent: 54 98% 65%; /* Brighter Soft Yellow for dark mode */
-    --accent-foreground: 54 90% 10%;
+    --accent: 45 95% 68%; /* Amarelo/Dourado mais brilhante */
+    --accent-foreground: 45 90% 15%; /* Marrom bem escuro */
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 70% 60%; /* Vermelho mais brilhante para dark mode */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 120 39% 49%;
+    --border: 220 15% 25%; /* Borda escura */
+    --input: 220 15% 20%; /* Input escuro */
+    --ring: 210 75% 70%; /* Anel de foco mais brilhante */
 
-    --chart-1: 120 39% 55%;
-    --chart-2: 54 98% 65%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-1: 210 75% 65%;
+    --chart-2: 45 95% 68%;
+    --chart-3: 180 55% 60%;
+    --chart-4: 250 65% 70%;
+    --chart-5: 30 85% 65%;
 
     /* Sidebar specific theme variables for dark mode */
-    --sidebar-background: 120 25% 10%; /* Dark green */
-    --sidebar-foreground: 120 30% 85%; /* Light green text */
-    --sidebar-primary: 120 39% 55%;
-    --sidebar-primary-foreground: 120 20% 10%;
-    --sidebar-accent: 120 25% 15%; /* Slightly lighter dark green for hover */
-    --sidebar-accent-foreground: 120 30% 90%;
-    --sidebar-border: 120 25% 15%;
-    --sidebar-ring: 120 39% 49%;
+    --sidebar-background: 215 20% 12%; /* Azul bem escuro para sidebar */
+    --sidebar-foreground: 210 25% 90%; /* Texto claro no sidebar */
+    --sidebar-primary: 210 75% 60%;
+    --sidebar-primary-foreground: 220 10% 10%;
+    --sidebar-accent: 210 30% 20%; /* Hover no sidebar */
+    --sidebar-accent-foreground: 210 30% 92%;
+    --sidebar-border: 215 20% 18%;
+    --sidebar-ring: 210 75% 65%;
   }
 }
 
