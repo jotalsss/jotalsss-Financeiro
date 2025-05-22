@@ -4,7 +4,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { PageHeader } from "@/components/common/page-header";
 import { FinancialOverview } from "@/components/dashboard/financial-overview";
-import { AiInsights } from "@/components/dashboard/ai-insights";
 import { GoalsSummary } from "@/components/dashboard/goals-summary";
 import { LayoutDashboard, Activity } from "lucide-react";
 import { MonthlyCategoryExpenseChart as MonthlyExpensesDetailChart } from "@/components/dashboard/monthly-category-expense-chart";
@@ -55,7 +54,6 @@ export default function DashboardPage() {
         </div>
          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Skeleton className="h-72 rounded-md" />
-          <Skeleton className="h-72 rounded-md" />
         </div>
       </div>
     );
@@ -85,11 +83,7 @@ export default function DashboardPage() {
         <MonthlyExpensesDetailChart currentDate={currentDate} />
       </section>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section aria-labelledby="ai-insights-heading">
-          <h2 id="ai-insights-heading" className="sr-only">Insights Financeiros com IA</h2>
-          <AiInsights selectedMonth={selectedMonthYear.month} selectedYear={selectedMonthYear.year} />
-        </section>
+      <div className="grid grid-cols-1 gap-6">
         <section aria-labelledby="goals-summary-heading">
           <h2 id="goals-summary-heading" className="sr-only">Resumo de Metas</h2>
           {/* GoalsSummary não será filtrado por mês por enquanto, mas poderia ser uma melhoria futura */}

@@ -1,4 +1,4 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/generate-financial-tips.ts';
+// Removed import for '@/ai/flows/generate-financial-tips.ts'; as the feature was removed
