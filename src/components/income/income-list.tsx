@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Edit2, Trash2, DollarSign, CalendarDays, Info } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface IncomeListProps {
   incomeList: Income[];
@@ -16,7 +18,12 @@ interface IncomeListProps {
 
 export function IncomeList({ incomeList, onEdit, onDelete }: IncomeListProps) {
   const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(amount);
-  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('pt-BR');
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+     // Adiciona o fuso horário para evitar problemas de "off-by-one" dia
+    const adjustedDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+    return format(adjustedDate, "MMMM yyyy", { locale: ptBR });
+  }
 
   if (incomeList.length === 0) {
     return (
@@ -53,7 +60,7 @@ export function IncomeList({ incomeList, onEdit, onDelete }: IncomeListProps) {
               <TableRow>
                 <TableHead>Origem</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
-                <TableHead>Data</TableHead>
+                <TableHead>Mês/Ano</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -65,9 +72,11 @@ export function IncomeList({ incomeList, onEdit, onDelete }: IncomeListProps) {
                     {income.source}
                   </TableCell>
                   <TableCell className="text-right">{formatCurrency(income.amount)}</TableCell>
-                  <TableCell className="flex items-center">
-                    <CalendarDays className="h-4 w-4 mr-2 text-blue-500 opacity-70" />
-                    {formatDate(income.date)}
+                  <TableCell>
+                    <div className="flex items-center">
+                      <CalendarDays className="h-4 w-4 mr-2 text-blue-500 opacity-70" />
+                      {formatDate(income.date)}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => onEdit(income)} aria-label="Editar receita">
@@ -86,4 +95,3 @@ export function IncomeList({ incomeList, onEdit, onDelete }: IncomeListProps) {
     </Card>
   );
 }
-

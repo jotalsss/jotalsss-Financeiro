@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Edit2, Trash2, CalendarDays, Info } from "lucide-react";
 import { expenseCategoryIcons } from "./expense-categories";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface ExpenseListProps {
   expenseList: Expense[];
@@ -17,7 +19,12 @@ interface ExpenseListProps {
 
 export function ExpenseList({ expenseList, onEdit, onDelete }: ExpenseListProps) {
   const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(amount);
-  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('pt-BR');
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    // Adiciona o fuso horário para evitar problemas de "off-by-one" dia
+    const adjustedDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+    return format(adjustedDate, "MMMM yyyy", { locale: ptBR });
+  }
 
   if (expenseList.length === 0) {
      return (
@@ -55,7 +62,7 @@ export function ExpenseList({ expenseList, onEdit, onDelete }: ExpenseListProps)
                 <TableHead>Descrição</TableHead>
                 <TableHead>Categoria</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
-                <TableHead>Data</TableHead>
+                <TableHead>Mês/Ano</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -72,9 +79,11 @@ export function ExpenseList({ expenseList, onEdit, onDelete }: ExpenseListProps)
                       </div>
                     </TableCell>
                     <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
-                    <TableCell className="flex items-center">
-                      <CalendarDays className="h-4 w-4 mr-2 text-blue-500 opacity-70" />
-                      {formatDate(expense.date)}
+                    <TableCell>
+                      <div className="flex items-center">
+                        <CalendarDays className="h-4 w-4 mr-2 text-blue-500 opacity-70" />
+                        {formatDate(expense.date)}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => onEdit(expense)} aria-label="Editar despesa">
@@ -94,4 +103,3 @@ export function ExpenseList({ expenseList, onEdit, onDelete }: ExpenseListProps)
     </Card>
   );
 }
-

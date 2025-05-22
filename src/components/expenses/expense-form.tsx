@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,13 +36,13 @@ import type { Expense, ExpenseCategory } from "@/lib/types";
 import { ExpenseCategories } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { expenseCategoryIcons, defaultExpenseCategories } from "./expense-categories";
-
+import React from "react";
 
 const expenseSchema = z.object({
   description: z.string().min(2, { message: "A descrição deve ter pelo menos 2 caracteres." }),
   amount: z.coerce.number().positive({ message: "O valor deve ser positivo." }),
   category: z.enum(ExpenseCategories, { required_error: "A categoria é obrigatória."}),
-  date: z.date({ required_error: "A data é obrigatória." }),
+  date: z.date({ required_error: "A data (mês/ano) é obrigatória." }),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseSchema>;
@@ -53,17 +54,32 @@ interface ExpenseFormProps {
 }
 
 export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProps) {
+  const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
+
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: initialData
-      ? { ...initialData, date: new Date(initialData.date) }
-      : { description: "", amount: 0, category: defaultExpenseCategories[0], date: new Date() },
+      ? { 
+          ...initialData, 
+          date: initialData.date ? new Date(new Date(initialData.date).getFullYear(), new Date(initialData.date).getMonth(), 1) : new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+        }
+      : { 
+          description: "", 
+          amount: 0, 
+          category: defaultExpenseCategories[0], 
+          date: new Date(new Date().getFullYear(), new Date().getMonth(), 1) 
+        },
   });
 
   const handleSubmit = (data: ExpenseFormValues) => {
     onSubmit({ ...data, date: data.date.toISOString() });
      if (!initialData) {
-      form.reset({ description: "", amount: 0, category: defaultExpenseCategories[0], date: new Date() });
+      form.reset({ 
+        description: "", 
+        amount: 0, 
+        category: defaultExpenseCategories[0], 
+        date: new Date(new Date().getFullYear(), new Date().getMonth(), 1) 
+      });
     }
   };
 
@@ -138,8 +154,8 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
               name="date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Data</FormLabel>
-                  <Popover>
+                  <FormLabel>Mês/Ano</FormLabel>
+                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -150,9 +166,9 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
                           )}
                         >
                           {field.value ? (
-                            format(field.value, "PPP", { locale: ptBR })
+                            format(field.value, "MMMM yyyy", { locale: ptBR })
                           ) : (
-                            <span>Escolha uma data</span>
+                            <span>Escolha um mês/ano</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -162,7 +178,18 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(currentMonth) => {
+                          if (currentMonth) {
+                            field.onChange(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1));
+                          } else {
+                            field.onChange(undefined);
+                          }
+                          setIsCalendarOpen(false);
+                        }}
+                        captionLayout="dropdown-buttons"
+                        fromYear={new Date().getFullYear() - 20}
+                        toYear={new Date().getFullYear() + 5}
+                        defaultMonth={field.value || new Date()}
                         initialFocus
                         locale={ptBR}
                       />
