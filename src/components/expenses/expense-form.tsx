@@ -1,0 +1,188 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon, Save } from "lucide-react";
+import type { Expense, ExpenseCategory } from "@/lib/types";
+import { ExpenseCategories } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { expenseCategoryIcons, defaultExpenseCategories } from "./expense-categories";
+
+
+const expenseSchema = z.object({
+  description: z.string().min(2, { message: "Description must be at least 2 characters." }),
+  amount: z.coerce.number().positive({ message: "Amount must be positive." }),
+  category: z.enum(ExpenseCategories, { required_error: "Category is required."}),
+  date: z.date({ required_error: "A date is required." }),
+});
+
+type ExpenseFormValues = z.infer<typeof expenseSchema>;
+
+interface ExpenseFormProps {
+  onSubmit: (data: Omit<Expense, "id">) => void;
+  initialData?: Expense | null;
+  onCancel?: () => void;
+}
+
+export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProps) {
+  const form = useForm<ExpenseFormValues>({
+    resolver: zodResolver(expenseSchema),
+    defaultValues: initialData
+      ? { ...initialData, date: new Date(initialData.date) }
+      : { description: "", amount: 0, category: defaultExpenseCategories[0], date: new Date() },
+  });
+
+  const handleSubmit = (data: ExpenseFormValues) => {
+    onSubmit({ ...data, date: data.date.toISOString() });
+     if (!initialData) {
+      form.reset({ description: "", amount: 0, category: defaultExpenseCategories[0], date: new Date() });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{initialData ? "Edit Expense" : "Add New Expense"}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="e.g., Groceries, Electricity Bill" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {defaultExpenseCategories.map((category) => {
+                          const Icon = expenseCategoryIcons[category as ExpenseCategory];
+                          return (
+                            <SelectItem key={category} value={category}>
+                              <div className="flex items-center gap-2">
+                                {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+                                {category}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex justify-end gap-2">
+              {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>}
+              <Button type="submit">
+                <Save className="mr-2 h-4 w-4" />
+                {initialData ? "Save Changes" : "Add Expense"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+}
