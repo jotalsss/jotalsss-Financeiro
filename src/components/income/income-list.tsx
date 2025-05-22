@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Income } from "@/lib/types";
@@ -14,7 +15,7 @@ interface IncomeListProps {
 }
 
 export function IncomeList({ incomeList, onEdit, onDelete }: IncomeListProps) {
-  const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD" }).format(amount); // Assuming USD
+  const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(amount);
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('pt-BR');
 
   if (incomeList.length === 0) {
@@ -85,3 +86,4 @@ export function IncomeList({ incomeList, onEdit, onDelete }: IncomeListProps) {
     </Card>
   );
 }
+

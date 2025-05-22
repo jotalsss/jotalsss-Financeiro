@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -12,7 +13,7 @@ import { useEffect, useState } from "react";
 
 function GoalProgressItem({ goal }: { goal: Goal }) {
   const progress = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
-  const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD" }).format(amount); // Assuming USD
+  const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(amount);
 
   return (
     <div className="mb-4 rounded-md border p-4 shadow-sm transition-shadow hover:shadow-md">
@@ -112,3 +113,4 @@ export function GoalsSummary() {
     </Card>
   );
 }
+

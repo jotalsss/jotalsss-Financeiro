@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Expense, ExpenseCategory } from "@/lib/types";
@@ -15,7 +16,7 @@ interface ExpenseListProps {
 }
 
 export function ExpenseList({ expenseList, onEdit, onDelete }: ExpenseListProps) {
-  const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD" }).format(amount); // Assuming USD
+  const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(amount);
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('pt-BR');
 
   if (expenseList.length === 0) {
@@ -93,3 +94,4 @@ export function ExpenseList({ expenseList, onEdit, onDelete }: ExpenseListProps)
     </Card>
   );
 }
+

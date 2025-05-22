@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Goal } from "@/lib/types";
@@ -14,7 +15,7 @@ interface GoalProgressCardProps {
 
 export function GoalProgressCard({ goal, onEdit, onDelete }: GoalProgressCardProps) {
   const progress = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
-  const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD" }).format(amount); // Assuming USD
+  const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(amount);
 
   return (
     <Card className="flex flex-col">
@@ -54,3 +55,4 @@ export function GoalProgressCard({ goal, onEdit, onDelete }: GoalProgressCardPro
     </Card>
   );
 }
+

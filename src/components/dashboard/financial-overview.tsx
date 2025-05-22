@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +41,7 @@ export function FinancialOverview() {
   const netBalance = totalIncome - totalExpenses;
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD" }).format(amount); // Assuming USD, adjust if BRL
+    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(amount);
   };
 
   return (
@@ -69,3 +70,4 @@ export function FinancialOverview() {
     </div>
   );
 }
+
