@@ -21,14 +21,15 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Save } from "lucide-react";
 import type { Income } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const incomeSchema = z.object({
-  source: z.string().min(2, { message: "Source must be at least 2 characters." }),
-  amount: z.coerce.number().positive({ message: "Amount must be positive." }),
-  date: z.date({ required_error: "A date is required." }),
+  source: z.string().min(2, { message: "A origem deve ter pelo menos 2 caracteres." }),
+  amount: z.coerce.number().positive({ message: "O valor deve ser positivo." }),
+  date: z.date({ required_error: "A data é obrigatória." }),
 });
 
 type IncomeFormValues = z.infer<typeof incomeSchema>;
@@ -57,7 +58,7 @@ export function IncomeForm({ onSubmit, initialData, onCancel }: IncomeFormProps)
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{initialData ? "Edit Income" : "Add New Income"}</CardTitle>
+        <CardTitle>{initialData ? "Editar Receita" : "Adicionar Nova Receita"}</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -67,9 +68,9 @@ export function IncomeForm({ onSubmit, initialData, onCancel }: IncomeFormProps)
               name="source"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Income Source</FormLabel>
+                  <FormLabel>Origem da Receita</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Salary, Freelance Project" {...field} />
+                    <Input placeholder="ex: Salário, Projeto Freelance" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -80,9 +81,9 @@ export function IncomeForm({ onSubmit, initialData, onCancel }: IncomeFormProps)
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount</FormLabel>
+                  <FormLabel>Valor</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="0.00" {...field} />
+                    <Input type="number" placeholder="0,00" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -93,7 +94,7 @@ export function IncomeForm({ onSubmit, initialData, onCancel }: IncomeFormProps)
               name="date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Date</FormLabel>
+                  <FormLabel>Data</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -105,9 +106,9 @@ export function IncomeForm({ onSubmit, initialData, onCancel }: IncomeFormProps)
                           )}
                         >
                           {field.value ? (
-                            format(field.value, "PPP")
+                            format(field.value, "PPP", { locale: ptBR })
                           ) : (
-                            <span>Pick a date</span>
+                            <span>Escolha uma data</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -122,6 +123,7 @@ export function IncomeForm({ onSubmit, initialData, onCancel }: IncomeFormProps)
                           date > new Date() || date < new Date("1900-01-01")
                         }
                         initialFocus
+                        locale={ptBR}
                       />
                     </PopoverContent>
                   </Popover>
@@ -130,10 +132,10 @@ export function IncomeForm({ onSubmit, initialData, onCancel }: IncomeFormProps)
               )}
             />
             <div className="flex justify-end gap-2">
-              {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>}
+              {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>}
               <Button type="submit">
                 <Save className="mr-2 h-4 w-4" />
-                {initialData ? "Save Changes" : "Add Income"}
+                {initialData ? "Salvar Alterações" : "Adicionar Receita"}
               </Button>
             </div>
           </form>

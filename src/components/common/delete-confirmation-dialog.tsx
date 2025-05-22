@@ -24,25 +24,25 @@ export function DeleteConfirmationDialog({
   open,
   onOpenChange,
   onConfirm,
-  itemName = "this item",
+  itemName = "este item",
 }: DeleteConfirmationDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete {itemName}.
+            Esta ação não pode ser desfeita. Isso excluirá permanentemente {itemName}.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            Excluir
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -40,27 +40,27 @@ export function FinancialOverview() {
   const netBalance = totalIncome - totalExpenses;
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD" }).format(amount); // Assuming USD, adjust if BRL
   };
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <StatCard
-        title="Total Income"
+        title="Total de Receitas"
         value={formatCurrency(totalIncome)}
         icon={TrendingUp}
         colorClass="text-green-500"
         isLoading={isLoading}
       />
       <StatCard
-        title="Total Expenses"
+        title="Total de Despesas"
         value={formatCurrency(totalExpenses)}
         icon={TrendingDown}
         colorClass="text-red-500"
         isLoading={isLoading}
       />
       <StatCard
-        title="Net Balance"
+        title="Saldo Líquido"
         value={formatCurrency(netBalance)}
         icon={Scale}
         colorClass={netBalance >= 0 ? "text-blue-500" : "text-orange-500"}

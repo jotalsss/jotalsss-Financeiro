@@ -22,16 +22,16 @@ export interface Goal {
 }
 
 export const ExpenseCategories = [
-  "Housing",
-  "Transportation",
-  "Food",
-  "Utilities",
-  "Healthcare",
-  "Personal Spending",
-  "Entertainment",
-  "Debt Payments",
-  "Savings",
-  "Other",
+  "Moradia",
+  "Transporte",
+  "Alimentação",
+  "Contas de Casa",
+  "Saúde",
+  "Despesas Pessoais",
+  "Lazer",
+  "Pagamento de Dívidas",
+  "Economias",
+  "Outros",
 ] as const;
 
 export type ExpenseCategory = typeof ExpenseCategories[number];

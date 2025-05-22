@@ -16,17 +16,17 @@ export function GoalList({ goalList, onEdit, onDelete }: GoalListProps) {
     return (
        <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Your Financial Goals</CardTitle>
-          <CardDescription>All your financial goals will appear here.</CardDescription>
+          <CardTitle>Suas Metas Financeiras</CardTitle>
+          <CardDescription>Todas as suas metas financeiras aparecerão aqui.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center rounded-md border border-dashed bg-muted/30 p-10 text-center">
             <Target className="h-12 w-12 text-muted-foreground/50" />
             <p className="mt-4 text-lg font-medium text-muted-foreground">
-              No goals set yet.
+              Nenhuma meta definida ainda.
             </p>
             <p className="text-sm text-muted-foreground">
-              Define your financial aspirations using the form above.
+              Defina suas aspirações financeiras usando o formulário acima.
             </p>
           </div>
         </CardContent>

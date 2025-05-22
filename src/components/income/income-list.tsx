@@ -14,24 +14,24 @@ interface IncomeListProps {
 }
 
 export function IncomeList({ incomeList, onEdit, onDelete }: IncomeListProps) {
-  const formatCurrency = (amount: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
-  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString();
+  const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD" }).format(amount); // Assuming USD
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('pt-BR');
 
   if (incomeList.length === 0) {
     return (
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Income Entries</CardTitle>
-          <CardDescription>All your recorded income will appear here.</CardDescription>
+          <CardTitle>Lançamentos de Receitas</CardTitle>
+          <CardDescription>Todas as suas receitas registradas aparecerão aqui.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center rounded-md border border-dashed bg-muted/30 p-10 text-center">
             <Info className="h-12 w-12 text-muted-foreground/50" />
             <p className="mt-4 text-lg font-medium text-muted-foreground">
-              No income added yet.
+              Nenhuma receita adicionada ainda.
             </p>
             <p className="text-sm text-muted-foreground">
-              Start by adding your first income entry using the form above.
+              Comece adicionando seu primeiro lançamento de receita usando o formulário acima.
             </p>
           </div>
         </CardContent>
@@ -42,18 +42,18 @@ export function IncomeList({ incomeList, onEdit, onDelete }: IncomeListProps) {
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>Income Entries</CardTitle>
-        <CardDescription>A list of your recorded income.</CardDescription>
+        <CardTitle>Lançamentos de Receitas</CardTitle>
+        <CardDescription>Uma lista das suas receitas registradas.</CardDescription>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px] w-full">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Source</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Origem</TableHead>
+                <TableHead className="text-right">Valor</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -69,10 +69,10 @@ export function IncomeList({ incomeList, onEdit, onDelete }: IncomeListProps) {
                     {formatDate(income.date)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(income)} aria-label="Edit income">
+                    <Button variant="ghost" size="icon" onClick={() => onEdit(income)} aria-label="Editar receita">
                       <Edit2 className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onDelete(income.id)} aria-label="Delete income" className="text-destructive hover:text-destructive/80">
+                    <Button variant="ghost" size="icon" onClick={() => onDelete(income.id)} aria-label="Excluir receita" className="text-destructive hover:text-destructive/80">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>

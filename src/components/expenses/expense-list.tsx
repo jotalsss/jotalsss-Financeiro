@@ -15,24 +15,24 @@ interface ExpenseListProps {
 }
 
 export function ExpenseList({ expenseList, onEdit, onDelete }: ExpenseListProps) {
-  const formatCurrency = (amount: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
-  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString();
+  const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD" }).format(amount); // Assuming USD
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('pt-BR');
 
   if (expenseList.length === 0) {
      return (
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Expense Entries</CardTitle>
-          <CardDescription>All your recorded expenses will appear here.</CardDescription>
+          <CardTitle>Lançamentos de Despesas</CardTitle>
+          <CardDescription>Todas as suas despesas registradas aparecerão aqui.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center rounded-md border border-dashed bg-muted/30 p-10 text-center">
             <Info className="h-12 w-12 text-muted-foreground/50" />
             <p className="mt-4 text-lg font-medium text-muted-foreground">
-              No expenses added yet.
+              Nenhuma despesa adicionada ainda.
             </p>
             <p className="text-sm text-muted-foreground">
-              Start by adding your first expense entry using the form above.
+              Comece adicionando seu primeiro lançamento de despesa usando o formulário acima.
             </p>
           </div>
         </CardContent>
@@ -43,19 +43,19 @@ export function ExpenseList({ expenseList, onEdit, onDelete }: ExpenseListProps)
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>Expense Entries</CardTitle>
-        <CardDescription>A list of your recorded expenses.</CardDescription>
+        <CardTitle>Lançamentos de Despesas</CardTitle>
+        <CardDescription>Uma lista das suas despesas registradas.</CardDescription>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px] w-full">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Description</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Descrição</TableHead>
+                <TableHead>Categoria</TableHead>
+                <TableHead className="text-right">Valor</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -76,10 +76,10 @@ export function ExpenseList({ expenseList, onEdit, onDelete }: ExpenseListProps)
                       {formatDate(expense.date)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => onEdit(expense)} aria-label="Edit expense">
+                      <Button variant="ghost" size="icon" onClick={() => onEdit(expense)} aria-label="Editar despesa">
                         <Edit2 className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onDelete(expense.id)} aria-label="Delete expense" className="text-destructive hover:text-destructive/80">
+                      <Button variant="ghost" size="icon" onClick={() => onDelete(expense.id)} aria-label="Excluir despesa" className="text-destructive hover:text-destructive/80">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>

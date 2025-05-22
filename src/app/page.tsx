@@ -10,23 +10,23 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Dashboard"
-        description="Welcome to RealWise! Here's your financial snapshot."
+        title="Painel"
+        description="Bem-vindo(a) ao RealWise! Aqui está seu resumo financeiro."
         icon={LayoutDashboard}
       />
 
       <section aria-labelledby="financial-overview-heading">
-        <h2 id="financial-overview-heading" className="sr-only">Financial Overview</h2>
+        <h2 id="financial-overview-heading" className="sr-only">Visão Geral Financeira</h2>
         <FinancialOverview />
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section aria-labelledby="ai-insights-heading">
-          <h2 id="ai-insights-heading" className="sr-only">AI Financial Insights</h2>
+          <h2 id="ai-insights-heading" className="sr-only">Insights Financeiros com IA</h2>
           <AiInsights />
         </section>
         <section aria-labelledby="goals-summary-heading">
-          <h2 id="goals-summary-heading" className="sr-only">Goals Summary</h2>
+          <h2 id="goals-summary-heading" className="sr-only">Resumo de Metas</h2>
           <GoalsSummary />
         </section>
       </div>

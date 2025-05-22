@@ -37,7 +37,7 @@ export function AiInsights() {
 
   const financialGoalsString = useMemo(() => {
     if (!isClient) return "";
-    return goalList.map(g => `${g.name} (Target: $${g.targetAmount.toFixed(2)})`).join(", ") || "No specific goals set yet.";
+    return goalList.map(g => `${g.name} (Meta: R$${g.targetAmount.toFixed(2)})`).join(", ") || "Nenhuma meta específica definida ainda.";
   }, [goalList, isClient]);
 
   const currentTotalIncome = useMemo(() => {
@@ -55,8 +55,8 @@ export function AiInsights() {
 
     if (currentTotalIncome === 0 && aggregatedExpenses.length === 0) {
       toast({
-        title: "Not Enough Data",
-        description: "Please add some income and expenses to generate insights.",
+        title: "Dados Insuficientes",
+        description: "Por favor, adicione algumas receitas e despesas para gerar insights.",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -73,15 +73,15 @@ export function AiInsights() {
       const result = await generateFinancialTips(input);
       setInsights(result.tips);
       toast({
-        title: "Insights Generated",
-        description: "Personalized financial tips are ready!",
+        title: "Insights Gerados",
+        description: "Suas dicas financeiras personalizadas estão prontas!",
       });
     } catch (e) {
-      console.error("Error generating insights:", e);
-      setError("Failed to generate insights. Please try again.");
+      console.error("Erro ao gerar insights:", e);
+      setError("Falha ao gerar insights. Por favor, tente novamente.");
       toast({
-        title: "Error",
-        description: "Could not generate insights. Check console for details.",
+        title: "Erro",
+        description: "Não foi possível gerar os insights. Verifique o console para detalhes.",
         variant: "destructive",
       });
     } finally {
@@ -95,10 +95,10 @@ export function AiInsights() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
-            AI Financial Insights
+            Insights Financeiros com IA
           </CardTitle>
           <CardDescription>
-            Personalized tips to help you manage your finances better.
+            Dicas personalizadas para ajudar você a gerenciar melhor suas finanças.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -107,7 +107,7 @@ export function AiInsights() {
         <CardFooter>
            <Button disabled className="w-full">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Loading AI Insights...
+            Carregando Insights com IA...
           </Button>
         </CardFooter>
       </Card>
@@ -120,10 +120,10 @@ export function AiInsights() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="h-6 w-6 text-primary" />
-          AI Financial Insights
+          Insights Financeiros com IA
         </CardTitle>
         <CardDescription>
-          Get personalized tips based on your income, expenses, and goals.
+          Receba dicas personalizadas com base em suas receitas, despesas e metas.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -132,7 +132,7 @@ export function AiInsights() {
             readOnly
             value={insights}
             className="h-40 resize-none bg-muted/50"
-            aria-label="Generated financial insights"
+            aria-label="Insights financeiros gerados"
           />
         )}
         {error && (
@@ -145,7 +145,7 @@ export function AiInsights() {
           <div className="flex h-40 flex-col items-center justify-center rounded-md border border-dashed bg-muted/30 p-4 text-center">
             <Sparkles className="h-10 w-10 text-muted-foreground/50" />
             <p className="mt-2 text-sm text-muted-foreground">
-              Click the button below to generate your personalized financial tips.
+              Clique no botão abaixo para gerar suas dicas financeiras personalizadas.
             </p>
           </div>
         )}
@@ -153,7 +153,7 @@ export function AiInsights() {
            <div className="flex h-40 flex-col items-center justify-center rounded-md border bg-muted/30 p-4 text-center">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
             <p className="mt-2 text-sm text-muted-foreground">
-              Generating your insights...
+              Gerando seus insights...
             </p>
           </div>
         )}
@@ -169,7 +169,7 @@ export function AiInsights() {
           ) : (
             <Sparkles className="mr-2 h-4 w-4" />
           )}
-          {insights ? "Regenerate Insights" : "Generate Insights"}
+          {insights ? "Gerar Novos Insights" : "Gerar Insights"}
         </Button>
       </CardFooter>
     </Card>

@@ -26,10 +26,10 @@ export default function ExpensesPage() {
   const handleFormSubmit = (data: Omit<Expense, "id">) => {
     if (editingExpense) {
       updateExpense({ ...data, id: editingExpense.id });
-      toast({ title: "Expense Updated", description: `Expense "${data.description}" has been updated.` });
+      toast({ title: "Despesa Atualizada", description: `A despesa "${data.description}" foi atualizada.` });
     } else {
       addExpense(data);
-      toast({ title: "Expense Added", description: `Expense "${data.description}" has been added.` });
+      toast({ title: "Despesa Adicionada", description: `A despesa "${data.description}" foi adicionada.` });
     }
     setEditingExpense(null);
     setIsFormVisible(false);
@@ -47,7 +47,7 @@ export default function ExpensesPage() {
   const confirmDelete = () => {
     if (expenseToDelete) {
       deleteExpense(expenseToDelete.id);
-      toast({ title: "Expense Deleted", description: `Expense "${expenseToDelete.description}" has been deleted.`, variant: "destructive" });
+      toast({ title: "Despesa Excluída", description: `A despesa "${expenseToDelete.description}" foi excluída.`, variant: "destructive" });
       setExpenseToDelete(null);
     }
   };
@@ -60,7 +60,7 @@ export default function ExpensesPage() {
   if (!isClient) {
      return (
       <div className="space-y-6">
-        <PageHeader title="Expenses" description="Track and manage your expenses." icon={TrendingDown} />
+        <PageHeader title="Despesas" description="Monitore e gerencie suas despesas." icon={TrendingDown} />
         <div className="animate-pulse">
           <div className="h-12 w-32 rounded-md bg-muted"></div>
           <div className="mt-6 h-64 rounded-md bg-muted"></div>
@@ -73,13 +73,13 @@ export default function ExpensesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Expenses"
-        description="Log and categorize all your expenditures."
+        title="Despesas"
+        description="Registre e categorize todos os seus gastos."
         icon={TrendingDown}
         action={
           !isFormVisible && (
             <Button onClick={() => { setIsFormVisible(true); setEditingExpense(null); }}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Expense
+              <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Despesa
             </Button>
           )
         }
@@ -107,7 +107,7 @@ export default function ExpensesPage() {
           open={!!expenseToDelete}
           onOpenChange={() => setExpenseToDelete(null)}
           onConfirm={confirmDelete}
-          itemName={`expense "${expenseToDelete.description}"`}
+          itemName={`a despesa "${expenseToDelete.description}"`}
         />
       )}
     </div>

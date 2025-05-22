@@ -26,10 +26,10 @@ export default function GoalsPage() {
   const handleFormSubmit = (data: Omit<Goal, "id">) => {
     if (editingGoal) {
       updateGoal({ ...data, id: editingGoal.id });
-      toast({ title: "Goal Updated", description: `Goal "${data.name}" has been updated.` });
+      toast({ title: "Meta Atualizada", description: `A meta "${data.name}" foi atualizada.` });
     } else {
       addGoal(data);
-      toast({ title: "Goal Set", description: `New goal "${data.name}" has been set.` });
+      toast({ title: "Meta Definida", description: `Nova meta "${data.name}" foi definida.` });
     }
     setEditingGoal(null);
     setIsFormVisible(false);
@@ -47,7 +47,7 @@ export default function GoalsPage() {
   const confirmDelete = () => {
     if (goalToDelete) {
       deleteGoal(goalToDelete.id);
-      toast({ title: "Goal Deleted", description: `Goal "${goalToDelete.name}" has been deleted.`, variant: "destructive" });
+      toast({ title: "Meta Excluída", description: `A meta "${goalToDelete.name}" foi excluída.`, variant: "destructive" });
       setGoalToDelete(null);
     }
   };
@@ -60,7 +60,7 @@ export default function GoalsPage() {
   if (!isClient) {
      return (
       <div className="space-y-6">
-        <PageHeader title="Financial Goals" description="Set and track your financial goals." icon={TargetIcon} />
+        <PageHeader title="Metas Financeiras" description="Defina e acompanhe suas metas financeiras." icon={TargetIcon} />
         <div className="animate-pulse">
           <div className="h-12 w-32 rounded-md bg-muted"></div>
           <div className="mt-6 h-64 rounded-md bg-muted"></div>
@@ -73,13 +73,13 @@ export default function GoalsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Financial Goals"
-        description="Define your financial ambitions and track your progress."
+        title="Metas Financeiras"
+        description="Defina suas ambições financeiras e acompanhe seu progresso."
         icon={TargetIcon}
         action={
           !isFormVisible && (
             <Button onClick={() => { setIsFormVisible(true); setEditingGoal(null); }}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Set New Goal
+              <PlusCircle className="mr-2 h-4 w-4" /> Definir Nova Meta
             </Button>
           )
         }
@@ -107,7 +107,7 @@ export default function GoalsPage() {
           open={!!goalToDelete}
           onOpenChange={() => setGoalToDelete(null)}
           onConfirm={confirmDelete}
-          itemName={`goal "${goalToDelete.name}"`}
+          itemName={`a meta "${goalToDelete.name}"`}
         />
       )}
     </div>

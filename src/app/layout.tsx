@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RealWise - Your Financial Organizer",
-  description: "Track your income, expenses, and achieve your financial goals with RealWise.",
+  title: "RealWise - Seu Organizador Financeiro",
+  description: "Acompanhe suas receitas, despesas e alcance seus objetivos financeiros com o RealWise.",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}
       >

@@ -27,10 +27,10 @@ export default function IncomePage() {
   const handleFormSubmit = (data: Omit<Income, "id">) => {
     if (editingIncome) {
       updateIncome({ ...data, id: editingIncome.id });
-      toast({ title: "Income Updated", description: `Income from "${data.source}" has been updated.` });
+      toast({ title: "Receita Atualizada", description: `A receita de "${data.source}" foi atualizada.` });
     } else {
       addIncome(data);
-      toast({ title: "Income Added", description: `Income from "${data.source}" has been added.` });
+      toast({ title: "Receita Adicionada", description: `A receita de "${data.source}" foi adicionada.` });
     }
     setEditingIncome(null);
     setIsFormVisible(false);
@@ -48,7 +48,7 @@ export default function IncomePage() {
   const confirmDelete = () => {
     if (incomeToDelete) {
       deleteIncome(incomeToDelete.id);
-      toast({ title: "Income Deleted", description: `Income from "${incomeToDelete.source}" has been deleted.`, variant: "destructive" });
+      toast({ title: "Receita Excluída", description: `A receita de "${incomeToDelete.source}" foi excluída.`, variant: "destructive" });
       setIncomeToDelete(null);
     }
   };
@@ -61,7 +61,7 @@ export default function IncomePage() {
   if (!isClient) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Income" description="Manage your income sources." icon={TrendingUp} />
+        <PageHeader title="Receitas" description="Gerencie suas fontes de receita." icon={TrendingUp} />
         <div className="animate-pulse">
           <div className="h-12 w-32 rounded-md bg-muted"></div>
           <div className="mt-6 h-64 rounded-md bg-muted"></div>
@@ -74,13 +74,13 @@ export default function IncomePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Income"
-        description="Track and manage all your income sources."
+        title="Receitas"
+        description="Monitore e gerencie todas as suas fontes de receita."
         icon={TrendingUp}
         action={
           !isFormVisible && (
             <Button onClick={() => { setIsFormVisible(true); setEditingIncome(null); }}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Income
+              <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Receita
             </Button>
           )
         }
@@ -108,7 +108,7 @@ export default function IncomePage() {
           open={!!incomeToDelete}
           onOpenChange={() => setIncomeToDelete(null)}
           onConfirm={confirmDelete}
-          itemName={`income from "${incomeToDelete.source}"`}
+          itemName={`a receita de "${incomeToDelete.source}"`}
         />
       )}
     </div>

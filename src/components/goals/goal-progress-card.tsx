@@ -14,7 +14,7 @@ interface GoalProgressCardProps {
 
 export function GoalProgressCard({ goal, onEdit, onDelete }: GoalProgressCardProps) {
   const progress = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
-  const formatCurrency = (amount: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+  const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD" }).format(amount); // Assuming USD
 
   return (
     <Card className="flex flex-col">
@@ -25,29 +25,29 @@ export function GoalProgressCard({ goal, onEdit, onDelete }: GoalProgressCardPro
             {goal.name}
           </CardTitle>
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" onClick={() => onEdit(goal)} aria-label={`Edit goal ${goal.name}`}>
+            <Button variant="ghost" size="icon" onClick={() => onEdit(goal)} aria-label={`Editar meta ${goal.name}`}>
               <Edit2 className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => onDelete(goal.id)} aria-label={`Delete goal ${goal.name}`} className="text-destructive hover:text-destructive/80">
+            <Button variant="ghost" size="icon" onClick={() => onDelete(goal.id)} aria-label={`Excluir meta ${goal.name}`} className="text-destructive hover:text-destructive/80">
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
         <CardDescription>
-          Target: {formatCurrency(goal.targetAmount)} | Current: {formatCurrency(goal.currentAmount)}
+          Meta: {formatCurrency(goal.targetAmount)} | Atual: {formatCurrency(goal.currentAmount)}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        <Progress value={Math.min(progress, 100)} aria-label={`${goal.name} progress`} className="h-3 mb-1" />
+        <Progress value={Math.min(progress, 100)} aria-label={`Progresso da meta ${goal.name}`} className="h-3 mb-1" />
         <p className="text-sm text-muted-foreground text-right">
-          {Math.min(progress, 100).toFixed(0)}% completed
+          {Math.min(progress, 100).toFixed(0)}% completo
         </p>
       </CardContent>
       {goal.deadline && (
         <CardFooter>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <CalendarClock className="h-3 w-3" />
-            Deadline: {new Date(goal.deadline).toLocaleDateString()}
+            Prazo: {new Date(goal.deadline).toLocaleDateString('pt-BR')}
           </p>
         </CardFooter>
       )}

@@ -20,10 +20,10 @@ import {
 } from "@/components/ui/sidebar";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/income", label: "Income", icon: TrendingUp },
-  { href: "/expenses", label: "Expenses", icon: TrendingDown },
-  { href: "/goals", label: "Goals", icon: Target },
+  { href: "/", label: "Painel", icon: LayoutDashboard },
+  { href: "/income", label: "Receitas", icon: TrendingUp },
+  { href: "/expenses", label: "Despesas", icon: TrendingDown },
+  { href: "/goals", label: "Metas", icon: Target },
 ];
 
 export function MainNav() {

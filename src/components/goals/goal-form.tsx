@@ -21,17 +21,18 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Save } from "lucide-react";
 import type { Goal } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const goalSchema = z.object({
-  name: z.string().min(2, { message: "Goal name must be at least 2 characters." }),
-  targetAmount: z.coerce.number().positive({ message: "Target amount must be positive." }),
-  currentAmount: z.coerce.number().min(0, { message: "Current amount cannot be negative." }).optional(),
+  name: z.string().min(2, { message: "O nome da meta deve ter pelo menos 2 caracteres." }),
+  targetAmount: z.coerce.number().positive({ message: "O valor alvo deve ser positivo." }),
+  currentAmount: z.coerce.number().min(0, { message: "O valor atual não pode ser negativo." }).optional(),
   deadline: z.date().optional(),
 }).refine(data => !data.currentAmount || data.currentAmount <= data.targetAmount, {
-  message: "Current amount cannot exceed target amount.",
+  message: "O valor atual não pode exceder o valor alvo.",
   path: ["currentAmount"],
 });
 
@@ -70,7 +71,7 @@ export function GoalForm({ onSubmit, initialData, onCancel }: GoalFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{initialData ? "Edit Goal" : "Set New Goal"}</CardTitle>
+        <CardTitle>{initialData ? "Editar Meta" : "Definir Nova Meta"}</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -80,9 +81,9 @@ export function GoalForm({ onSubmit, initialData, onCancel }: GoalFormProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Goal Name</FormLabel>
+                  <FormLabel>Nome da Meta</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Vacation Fund, Emergency Savings" {...field} />
+                    <Input placeholder="ex: Fundo de Férias, Reserva de Emergência" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -94,9 +95,9 @@ export function GoalForm({ onSubmit, initialData, onCancel }: GoalFormProps) {
                 name="targetAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Target Amount</FormLabel>
+                    <FormLabel>Valor Alvo</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0.00" {...field} />
+                      <Input type="number" placeholder="0,00" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -107,9 +108,9 @@ export function GoalForm({ onSubmit, initialData, onCancel }: GoalFormProps) {
                 name="currentAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Current Amount (Optional)</FormLabel>
+                    <FormLabel>Valor Atual (Opcional)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0.00" {...field} />
+                      <Input type="number" placeholder="0,00" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -121,7 +122,7 @@ export function GoalForm({ onSubmit, initialData, onCancel }: GoalFormProps) {
               name="deadline"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Deadline (Optional)</FormLabel>
+                  <FormLabel>Prazo (Opcional)</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -133,9 +134,9 @@ export function GoalForm({ onSubmit, initialData, onCancel }: GoalFormProps) {
                           )}
                         >
                           {field.value ? (
-                            format(field.value, "PPP")
+                            format(field.value, "PPP", { locale: ptBR })
                           ) : (
-                            <span>Pick a date</span>
+                            <span>Escolha uma data</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -150,6 +151,7 @@ export function GoalForm({ onSubmit, initialData, onCancel }: GoalFormProps) {
                           date < new Date(new Date().setDate(new Date().getDate() -1)) // Disable past dates
                         }
                         initialFocus
+                        locale={ptBR}
                       />
                     </PopoverContent>
                   </Popover>
@@ -158,10 +160,10 @@ export function GoalForm({ onSubmit, initialData, onCancel }: GoalFormProps) {
               )}
             />
             <div className="flex justify-end gap-2">
-              {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>}
+              {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>}
               <Button type="submit">
                 <Save className="mr-2 h-4 w-4" />
-                {initialData ? "Save Changes" : "Set Goal"}
+                {initialData ? "Salvar Alterações" : "Definir Meta"}
               </Button>
             </div>
           </form>

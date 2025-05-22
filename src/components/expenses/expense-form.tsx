@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Save } from "lucide-react";
 import type { Expense, ExpenseCategory } from "@/lib/types";
 import { ExpenseCategories } from "@/lib/types";
@@ -37,10 +38,10 @@ import { expenseCategoryIcons, defaultExpenseCategories } from "./expense-catego
 
 
 const expenseSchema = z.object({
-  description: z.string().min(2, { message: "Description must be at least 2 characters." }),
-  amount: z.coerce.number().positive({ message: "Amount must be positive." }),
-  category: z.enum(ExpenseCategories, { required_error: "Category is required."}),
-  date: z.date({ required_error: "A date is required." }),
+  description: z.string().min(2, { message: "A descrição deve ter pelo menos 2 caracteres." }),
+  amount: z.coerce.number().positive({ message: "O valor deve ser positivo." }),
+  category: z.enum(ExpenseCategories, { required_error: "A categoria é obrigatória."}),
+  date: z.date({ required_error: "A data é obrigatória." }),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseSchema>;
@@ -69,7 +70,7 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{initialData ? "Edit Expense" : "Add New Expense"}</CardTitle>
+        <CardTitle>{initialData ? "Editar Despesa" : "Adicionar Nova Despesa"}</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -79,9 +80,9 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="e.g., Groceries, Electricity Bill" {...field} />
+                    <Textarea placeholder="ex: Supermercado, Conta de Luz" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -93,9 +94,9 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Amount</FormLabel>
+                    <FormLabel>Valor</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0.00" {...field} />
+                      <Input type="number" placeholder="0,00" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -106,11 +107,11 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>Categoria</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
+                          <SelectValue placeholder="Selecione uma categoria" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -137,7 +138,7 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
               name="date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Date</FormLabel>
+                  <FormLabel>Data</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -149,9 +150,9 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
                           )}
                         >
                           {field.value ? (
-                            format(field.value, "PPP")
+                            format(field.value, "PPP", { locale: ptBR })
                           ) : (
-                            <span>Pick a date</span>
+                            <span>Escolha uma data</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -166,6 +167,7 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
                           date > new Date() || date < new Date("1900-01-01")
                         }
                         initialFocus
+                        locale={ptBR}
                       />
                     </PopoverContent>
                   </Popover>
@@ -174,10 +176,10 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
               )}
             />
             <div className="flex justify-end gap-2">
-              {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>}
+              {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>}
               <Button type="submit">
                 <Save className="mr-2 h-4 w-4" />
-                {initialData ? "Save Changes" : "Add Expense"}
+                {initialData ? "Salvar Alterações" : "Adicionar Despesa"}
               </Button>
             </div>
           </form>

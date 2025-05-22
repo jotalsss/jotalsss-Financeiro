@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 
 function GoalProgressItem({ goal }: { goal: Goal }) {
   const progress = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
-  const formatCurrency = (amount: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+  const formatCurrency = (amount: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD" }).format(amount); // Assuming USD
 
   return (
     <div className="mb-4 rounded-md border p-4 shadow-sm transition-shadow hover:shadow-md">
@@ -22,10 +22,10 @@ function GoalProgressItem({ goal }: { goal: Goal }) {
           {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
         </span>
       </div>
-      <Progress value={Math.min(progress, 100)} aria-label={`${goal.name} progress`} className="h-3" />
+      <Progress value={Math.min(progress, 100)} aria-label={`Progresso da meta ${goal.name}`} className="h-3" />
       <p className="mt-1 text-xs text-muted-foreground text-right">
-        {Math.min(progress, 100).toFixed(0)}% completed
-        {goal.deadline && ` (Due: ${new Date(goal.deadline).toLocaleDateString()})`}
+        {Math.min(progress, 100).toFixed(0)}% completo
+        {goal.deadline && ` (Prazo: ${new Date(goal.deadline).toLocaleDateString('pt-BR')})`}
       </p>
     </div>
   );
@@ -45,9 +45,9 @@ export function GoalsSummary() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-6 w-6 text-primary" />
-            Goals Overview
+            Visão Geral das Metas
           </CardTitle>
-          <CardDescription>Track your progress towards your financial goals.</CardDescription>
+          <CardDescription>Acompanhe o progresso em direção às suas metas financeiras.</CardDescription>
         </CardHeader>
         <CardContent>
           <Skeleton className="h-8 w-full mb-4" />
@@ -58,7 +58,7 @@ export function GoalsSummary() {
           <Button asChild className="w-full" disabled>
             <Link href="/goals">
               <PlusCircle className="mr-2 h-4 w-4" />
-              Manage Goals
+              Gerenciar Metas
             </Link>
           </Button>
         </CardFooter>
@@ -73,19 +73,19 @@ export function GoalsSummary() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="h-6 w-6 text-primary" />
-          Goals Overview
+          Visão Geral das Metas
         </CardTitle>
-        <CardDescription>Track your progress towards your financial goals.</CardDescription>
+        <CardDescription>Acompanhe o progresso em direção às suas metas financeiras.</CardDescription>
       </CardHeader>
       <CardContent>
         {goalList.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-md border border-dashed bg-muted/30 p-6 text-center">
             <Target className="h-10 w-10 text-muted-foreground/50" />
             <p className="mt-3 text-sm text-muted-foreground">
-              You haven't set any financial goals yet.
+              Você ainda não definiu nenhuma meta financeira.
             </p>
             <Button asChild variant="link" className="mt-1">
-              <Link href="/goals">Set your first goal</Link>
+              <Link href="/goals">Defina sua primeira meta</Link>
             </Button>
           </div>
         ) : (
@@ -95,7 +95,7 @@ export function GoalsSummary() {
             ))}
             {goalList.length > 3 && (
               <p className="text-sm text-center text-muted-foreground mt-2">
-                And {goalList.length - 3} more...
+                E mais {goalList.length - 3}...
               </p>
             )}
           </div>
@@ -105,7 +105,7 @@ export function GoalsSummary() {
         <Button asChild className="w-full">
           <Link href="/goals">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Manage Goals
+            Gerenciar Metas
           </Link>
         </Button>
       </CardFooter>

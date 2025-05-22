@@ -36,16 +36,17 @@ const prompt = ai.definePrompt({
   name: 'financialTipsPrompt',
   input: {schema: FinancialTipsInputSchema},
   output: {schema: FinancialTipsOutputSchema},
-  prompt: `You are a financial advisor. Based on the user's income, expenses, and financial goals, provide personalized financial tips and suggestions.
+  // The prompt below is in Brazilian Portuguese
+  prompt: `Você é um consultor financeiro. Com base na renda, despesas e metas financeiras do usuário, forneça dicas e sugestões financeiras personalizadas.
 
-Income: {{income}}
-Expenses:
+Renda: {{income}}
+Despesas:
 {{#each expenses}}
-  - Category: {{this.category}}, Amount: {{this.amount}}
+  - Categoria: {{this.category}}, Valor: {{this.amount}}
 {{/each}}
-Financial Goals: {{financialGoals}}
+Metas Financeiras: {{financialGoals}}
 
-Tips:`,
+Dicas:`,
 });
 
 const generateFinancialTipsFlow = ai.defineFlow(

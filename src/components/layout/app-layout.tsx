@@ -21,7 +21,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon" side="left">
         <SidebarHeader className="p-4">
-          <Link href="/" className="flex items-center gap-2" aria-label="RealWise Home">
+          <Link href="/" className="flex items-center gap-2" aria-label="Página Inicial RealWise">
             <Coins className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold text-primary group-data-[collapsible=icon]:hidden">
               RealWise
@@ -41,7 +41,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md sm:h-16 sm:px-6 md:hidden">
           <SidebarTrigger />
-           <Link href="/" className="flex items-center gap-2" aria-label="RealWise Home">
+           <Link href="/" className="flex items-center gap-2" aria-label="Página Inicial RealWise">
             <Coins className="h-7 w-7 text-primary" />
             <h1 className="text-xl font-semibold text-primary">
               RealWise
