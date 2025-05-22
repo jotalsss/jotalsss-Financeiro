@@ -4,18 +4,18 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { auth } from '@/lib/firebase'; // Importar auth do Firebase
-import { 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut,
-  type User 
-} from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+import { loginUser, registerUser } from '@/lib/auth-simulation'; // Usar a simulação
+
+const LOGGED_IN_USER_KEY = "realwise_logged_in_user_email";
+
+// Interface para o usuário logado (simulado)
+interface AppUser {
+  email: string;
+}
 
 interface AuthContextType {
-  currentUser: User | null; // Agora é o objeto User do Firebase
+  currentUser: AppUser | null;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   register: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
@@ -37,18 +37,21 @@ function LoadingScreen() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Combina initialLoading e authChecked
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      setIsLoading(false);
-    });
-    return () => unsubscribe(); // Cleanup subscription on unmount
+    // Verificar se há um usuário "logado" no localStorage ao iniciar
+    if (typeof window !== "undefined") {
+      const storedUserEmail = localStorage.getItem(LOGGED_IN_USER_KEY);
+      if (storedUserEmail) {
+        setCurrentUser({ email: storedUserEmail });
+      }
+    }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -59,7 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (currentUser && isPublicPath) {
         router.push('/');
       } else if (!currentUser && !isPublicPath) {
-        // Evitar redirecionamento para rotas internas do Next.js ou API
         if (!pathname.startsWith('/api/') && !pathname.startsWith('/_next/')) {
           router.push('/login');
         }
@@ -68,48 +70,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [currentUser, pathname, router, isLoading]);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      return { success: true };
-    } catch (error: any) {
-      console.error("Erro de login:", error);
-      let message = "Falha no login. Verifique suas credenciais.";
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        message = "E-mail ou senha inválidos.";
-      } else if (error.code === 'auth/invalid-email') {
-        message = "Formato de e-mail inválido.";
+    const result = loginUser(email, password);
+    if (result.success && result.user) {
+      setCurrentUser({ email: result.user.email });
+      if (typeof window !== "undefined") {
+        localStorage.setItem(LOGGED_IN_USER_KEY, result.user.email);
       }
-      return { success: false, message };
+      // O useEffect cuidará do redirecionamento
     }
+    return result;
   };
 
   const logout = async () => {
-    try {
-      await signOut(auth);
-      // O useEffect cuidará do redirecionamento
-    } catch (error) {
-      console.error("Erro ao sair:", error);
-      toast({ title: "Erro ao Sair", description: "Não foi possível fazer logout.", variant: "destructive" });
+    setCurrentUser(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(LOGGED_IN_USER_KEY);
     }
+    // O useEffect cuidará do redirecionamento para /login
   };
 
   const register = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      // O onAuthStateChanged irá atualizar currentUser e o useEffect cuidará do redirecionamento
-      return { success: true };
-    } catch (error: any) {
-      console.error("Erro de registro:", error);
-      let message = "Falha no registro.";
-      if (error.code === 'auth/email-already-in-use') {
-        message = "Este e-mail já está em uso.";
-      } else if (error.code === 'auth/invalid-email') {
-        message = "Formato de e-mail inválido.";
-      } else if (error.code === 'auth/weak-password') {
-        message = "A senha é muito fraca. Use pelo menos 6 caracteres.";
+    const result = registerUser(email, password);
+    if (result.success) {
+      // Auto-login após registro bem-sucedido
+      const loginResult = await login(email, password);
+      if (!loginResult.success) {
+        // Isso não deveria acontecer se o registro foi bem-sucedido e o login usa a mesma lógica
+        return { success: false, message: "Erro ao fazer login após o registro." };
       }
-      return { success: false, message };
     }
+    return result;
   };
   
   if (isLoading) {

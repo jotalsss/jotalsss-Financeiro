@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState(""); // Mudou de username para email
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login, currentUser, isLoading: authIsLoading } = useAuth();
   const { toast } = useToast();
@@ -40,20 +40,17 @@ export default function LoginPage() {
 
     const result = await login(email.trim(), password);
     
-    if (result.success) {
-      // O redirecionamento é tratado pelo AuthProvider/useEffect
-      // toast({ title: "Login Bem-Sucedido!", description: "Bem-vindo(a) de volta!"});
-    } else {
+    if (!result.success) {
       toast({
         title: "Erro de Login",
         description: result.message || "Não foi possível fazer login. Verifique suas credenciais.",
         variant: "destructive",
       });
     }
+    // O redirecionamento em caso de sucesso é tratado pelo AuthProvider/useEffect
     setIsSubmitting(false);
   };
   
-  // Se auth estiver carregando, ou se não estiver carregando E já houver um usuário logado
   if (authIsLoading || (!authIsLoading && currentUser)) {
     return (
       <div className="flex h-screen items-center justify-center bg-background p-4">
@@ -108,6 +105,9 @@ export default function LoginPage() {
               <Button variant="link" asChild className="p-0 h-auto">
                 <Link href="/register">Registre-se</Link>
               </Button>
+            </p>
+             <p className="text-red-500 mt-2 text-xs">
+              Atenção: Este é um sistema de protótipo. <br/>As senhas são armazenadas de forma insegura (apenas codificadas). <br/>Não use senhas reais ou importantes.
             </p>
             <p>© {new Date().getFullYear()} RealWise</p>
             <p className="mt-1">Simples e direto ao ponto para suas finanças.</p>

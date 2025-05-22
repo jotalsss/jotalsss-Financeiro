@@ -6,50 +6,40 @@ import { useState, useEffect, useCallback } from "react";
 import { getMonth, getYear, startOfMonth } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 
-// Helper function para localStorage, agora usando userId (que será o Firebase UID)
-function useLocalStorageState<T>(key: string, defaultValue: T, userId: string | null) {
+// Helper function para localStorage, agora usando o email do usuário (simulado)
+function useLocalStorageState<T>(key: string, defaultValue: T, userEmail: string | null) {
   const [state, setState] = useState<T>(() => {
-    if (typeof window === 'undefined' || !userId) {
+    if (typeof window === 'undefined' || !userEmail) {
       return defaultValue;
     }
-    // Se um novo usuário logar, queremos que ele comece com o defaultValue,
-    // não com os dados do usuário anterior se a chave base for a mesma.
-    // A compositeKey já resolve isso.
     try {
-      const compositeKey = `${key}_${userId}`;
+      const compositeKey = `${key}_${userEmail.toLowerCase()}`; // Usa email para chavear
       const storedValue = localStorage.getItem(compositeKey);
       if (storedValue) {
         return JSON.parse(storedValue) as T;
       }
     } catch (error) {
-      // console.error(`Error reading localStorage key "${compositeKey}" on init:`, error);
+      // console.error(`Error reading localStorage key "${key}_${userEmail}" on init:`, error);
     }
     return defaultValue;
   });
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !userId) {
-      // Se o usuário deslogar (userId se torna null), não limpar o localStorage aqui.
-      // A lógica de carregamento inicial de useState já lida com a troca de usuário.
+    if (typeof window === 'undefined' || !userEmail) {
       return;
     }
     try {
-      const compositeKey = `${key}_${userId}`;
+      const compositeKey = `${key}_${userEmail.toLowerCase()}`;
       localStorage.setItem(compositeKey, JSON.stringify(state));
     } catch (error) {
       // console.error(`Error writing localStorage key "${compositeKey}":`, error);
     }
-  }, [key, state, userId]);
+  }, [key, state, userEmail]);
 
-  // Efeito para resetar o estado para o defaultValue quando o userId muda para null (logout)
-  // ou quando muda para um novo userId.
   useEffect(() => {
-    if (typeof window !== 'undefined' && userId) {
-        // Quando o userId muda (novo login), precisamos recarregar do localStorage ou usar defaultValue
-        // A inicialização do useState já faz isso ao usar o `userId` na compositeKey.
-        // Se quiséssemos forçar uma releitura aqui:
+    if (typeof window !== 'undefined' && userEmail) {
         try {
-            const compositeKey = `${key}_${userId}`;
+            const compositeKey = `${key}_${userEmail.toLowerCase()}`;
             const storedValue = localStorage.getItem(compositeKey);
             if (storedValue) {
                 setState(JSON.parse(storedValue) as T);
@@ -59,11 +49,10 @@ function useLocalStorageState<T>(key: string, defaultValue: T, userId: string | 
         } catch (error) {
             setState(defaultValue);
         }
-    } else if (typeof window !== 'undefined' && !userId) {
-        // Usuário deslogou
+    } else if (typeof window !== 'undefined' && !userEmail) {
         setState(defaultValue);
     }
-  }, [userId, key, defaultValue]);
+  }, [userEmail, key, defaultValue]);
 
 
   return [state, setState] as const;
@@ -71,60 +60,60 @@ function useLocalStorageState<T>(key: string, defaultValue: T, userId: string | 
 
 export function useFinancialData() {
   const { currentUser } = useAuth();
-  const userId = currentUser ? currentUser.uid : null; // Usar Firebase UID
+  const userEmail = currentUser ? currentUser.email : null; // Usar e-mail do usuário simulado
 
-  const [incomeList, setIncomeList] = useLocalStorageState<Income[]>("realwise_income", [], userId);
-  const [expenseList, setExpenseList] = useLocalStorageState<Expense[]>("realwise_expenses", [], userId);
-  const [goalList, setGoalList] = useLocalStorageState<Goal[]>("realwise_goals", [], userId);
-  const [defaultMonthlyIncomeData, setDefaultMonthlyIncomeInternal] = useLocalStorageState<DefaultMonthlyIncome | null>("realwise_default_monthly_income", null, userId);
+  const [incomeList, setIncomeList] = useLocalStorageState<Income[]>("realwise_income", [], userEmail);
+  const [expenseList, setExpenseList] = useLocalStorageState<Expense[]>("realwise_expenses", [], userEmail);
+  const [goalList, setGoalList] = useLocalStorageState<Goal[]>("realwise_goals", [], userEmail);
+  const [defaultMonthlyIncomeData, setDefaultMonthlyIncomeInternal] = useLocalStorageState<DefaultMonthlyIncome | null>("realwise_default_monthly_income", null, userEmail);
 
   const addIncome = useCallback((income: Omit<Income, "id">) => {
-    if (!userId) return;
+    if (!userEmail) return;
     setIncomeList((prev) => [...prev, { ...income, id: crypto.randomUUID() }]);
-  }, [setIncomeList, userId]);
+  }, [setIncomeList, userEmail]);
 
   const updateIncome = useCallback((updatedIncome: Income) => {
-    if (!userId) return;
+    if (!userEmail) return;
     setIncomeList((prev) => prev.map((inc) => (inc.id === updatedIncome.id ? updatedIncome : inc)));
-  }, [setIncomeList, userId]);
+  }, [setIncomeList, userEmail]);
 
   const deleteIncome = useCallback((id: string) => {
-    if (!userId) return;
+    if (!userEmail) return;
     setIncomeList((prev) => prev.filter((inc) => inc.id !== id));
-  }, [setIncomeList, userId]);
+  }, [setIncomeList, userEmail]);
 
   const addExpense = useCallback((expense: Omit<Expense, "id">) => {
-    if (!userId) return;
+    if (!userEmail) return;
     setExpenseList((prev) => [...prev, { ...expense, id: crypto.randomUUID() }]);
-  }, [setExpenseList, userId]);
+  }, [setExpenseList, userEmail]);
 
   const updateExpense = useCallback((updatedExpense: Expense) => {
-    if (!userId) return;
+    if (!userEmail) return;
     setExpenseList((prev) => prev.map((exp) => (exp.id === updatedExpense.id ? updatedExpense : exp)));
-  }, [setExpenseList, userId]);
+  }, [setExpenseList, userEmail]);
 
   const deleteExpense = useCallback((id: string) => {
-    if (!userId) return;
+    if (!userEmail) return;
     setExpenseList((prev) => prev.filter((exp) => exp.id !== id));
-  }, [setExpenseList, userId]);
+  }, [setExpenseList, userEmail]);
 
   const addGoal = useCallback((goal: Omit<Goal, "id">) => {
-    if (!userId) return;
+    if (!userEmail) return;
     setGoalList((prev) => [...prev, { ...goal, id: crypto.randomUUID() }]);
-  }, [setGoalList, userId]);
+  }, [setGoalList, userEmail]);
 
   const updateGoal = useCallback((updatedGoal: Goal) => {
-    if (!userId) return;
+    if (!userEmail) return;
     setGoalList((prev) => prev.map((g) => (g.id === updatedGoal.id ? updatedGoal : g)));
-  }, [setGoalList, userId]);
+  }, [setGoalList, userEmail]);
 
   const deleteGoal = useCallback((id: string) => {
-    if (!userId) return;
+    if (!userEmail) return;
     setGoalList((prev) => prev.filter((g) => g.id !== id));
-  }, [setGoalList, userId]);
+  }, [setGoalList, userEmail]);
 
   const ensureDefaultMonthlyIncomeExists = useCallback((year: number, month: number) => {
-    if (!userId || !defaultMonthlyIncomeData || !defaultMonthlyIncomeData.source || defaultMonthlyIncomeData.amount <= 0) {
+    if (!userEmail || !defaultMonthlyIncomeData || !defaultMonthlyIncomeData.source || defaultMonthlyIncomeData.amount <= 0) {
       return;
     }
     
@@ -146,14 +135,11 @@ export function useFinancialData() {
         date: dateForIncome 
       }]);
     }
-  }, [defaultMonthlyIncomeData, incomeList, userId, setIncomeList]); // Removido addIncome, usando setIncomeList diretamente
+  }, [defaultMonthlyIncomeData, incomeList, userEmail, setIncomeList]);
   
   const getTotalIncome = useCallback((filter?: { month: number; year: number }) => {
-    if (!userId) return 0;
-    
-    // A chamada para ensureDefaultMonthlyIncomeExists foi movida para um useEffect abaixo
-    // para evitar chamadas dentro de uma função que é usada durante o render.
-    
+    if (!userEmail) return 0;
+        
     let incomesToConsider = incomeList;
     if (filter && typeof filter.month === 'number' && typeof filter.year === 'number') {
       incomesToConsider = incomeList.filter(income => {
@@ -162,10 +148,10 @@ export function useFinancialData() {
       });
     }
     return incomesToConsider.reduce((sum, income) => sum + income.amount, 0);
-  }, [incomeList, userId]); // Removido ensureDefaultMonthlyIncomeExists
+  }, [incomeList, userEmail]);
 
   const getTotalExpenses = useCallback((filter?: { month: number; year: number }) => {
-    if (!userId) return 0;
+    if (!userEmail) return 0;
     let expensesToConsider = expenseList;
     if (filter && typeof filter.month === 'number' && typeof filter.year === 'number') {
       expensesToConsider = expenseList.filter(expense => {
@@ -174,27 +160,24 @@ export function useFinancialData() {
       });
     }
     return expensesToConsider.reduce((sum, expense) => sum + expense.amount, 0);
-  }, [expenseList, userId]);
+  }, [expenseList, userEmail]);
 
   const setDefaultMonthlyIncome = useCallback((income: DefaultMonthlyIncome) => {
-    if (!userId) return;
+    if (!userEmail) return;
     setDefaultMonthlyIncomeInternal(income);
-    // A lógica de ensureDefaultMonthlyIncomeExists será acionada pelo useEffect abaixo.
-  }, [setDefaultMonthlyIncomeInternal, userId]);
+  }, [setDefaultMonthlyIncomeInternal, userEmail]);
 
   const removeDefaultMonthlyIncome = useCallback(() => {
-    if (!userId) return;
+    if (!userEmail) return;
     setDefaultMonthlyIncomeInternal(null);
-  }, [setDefaultMonthlyIncomeInternal, userId]);
+  }, [setDefaultMonthlyIncomeInternal, userEmail]);
 
   useEffect(() => {
-    // Garante o salário padrão para o mês atual APENAS quando o usuário está logado
-    // e os dados do salário padrão existem.
-    if (userId && defaultMonthlyIncomeData && defaultMonthlyIncomeData.source && defaultMonthlyIncomeData.amount > 0) {
+    if (userEmail && defaultMonthlyIncomeData && defaultMonthlyIncomeData.source && defaultMonthlyIncomeData.amount > 0) {
       const today = new Date();
       ensureDefaultMonthlyIncomeExists(getYear(today), getMonth(today));
     }
-  }, [userId, defaultMonthlyIncomeData, ensureDefaultMonthlyIncomeExists]);
+  }, [userEmail, defaultMonthlyIncomeData, ensureDefaultMonthlyIncomeExists]);
 
   return {
     incomeList,
@@ -214,6 +197,6 @@ export function useFinancialData() {
     defaultMonthlyIncome: defaultMonthlyIncomeData,
     setDefaultMonthlyIncome,
     removeDefaultMonthlyIncome,
-    ensureDefaultMonthlyIncomeExists // Mantido caso seja necessário chamar externamente
+    ensureDefaultMonthlyIncomeExists
   };
 }

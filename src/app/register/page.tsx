@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserPlus, Loader2 } from "lucide-react"; // Removido Coins
+import { UserPlus, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
-  const [email, setEmail] = useState(""); // Mudou de username para email
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const { register, currentUser, isLoading: authIsLoading } = useAuth();
@@ -50,12 +50,11 @@ export default function RegisterPage() {
       return;
     }
     
-    // Validação de força da senha do Firebase é feita no backend (mínimo 6 caracteres)
-    // if (password.length < 6) { 
-    //   toast({ title: "Senha Fraca", description: "A senha deve ter pelo menos 6 caracteres.", variant: "destructive"}); 
-    //   setIsSubmitting(false);
-    //   return; 
-    // }
+    if (password.length < 6) { 
+      toast({ title: "Senha Fraca", description: "A senha deve ter pelo menos 6 caracteres.", variant: "destructive"}); 
+      setIsSubmitting(false);
+      return; 
+    }
 
     const result = await register(email.trim(), password);
 
@@ -64,7 +63,7 @@ export default function RegisterPage() {
         title: "Registro Bem-Sucedido!",
         description: `Bem-vindo(a)! Sua conta foi criada.`,
       });
-      // O AuthContext (onAuthStateChanged) deve redirecionar automaticamente após o registro bem-sucedido
+      // O AuthContext (useEffect) deve redirecionar automaticamente após o registro bem-sucedido
     } else {
       toast({
         title: "Erro no Registro",
@@ -132,6 +131,9 @@ export default function RegisterPage() {
             </div>
             <p className="text-xs text-muted-foreground pt-1">
               Ao se registrar, você concorda com nossos Termos de Serviço e Política de Privacidade (links de exemplo).
+            </p>
+             <p className="text-red-500 mt-2 text-xs">
+              Atenção: Este é um sistema de protótipo. <br/>As senhas são armazenadas de forma insegura (apenas codificadas). <br/>Não use senhas reais ou importantes.
             </p>
             <Button type="submit" className="w-full text-lg py-6" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Criar Conta"}
