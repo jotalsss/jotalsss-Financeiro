@@ -186,11 +186,10 @@ export function ExpenseForm({ onSubmit, initialData, onCancel }: ExpenseFormProp
                           }
                           setIsCalendarOpen(false);
                         }}
-                        captionLayout="dropdown-buttons"
+                        captionLayout="buttons"
                         fromYear={new Date().getFullYear() - 20}
                         toYear={new Date().getFullYear() + 5}
                         defaultMonth={field.value || new Date()}
-                        initialFocus
                         locale={ptBR}
                       />
                     </PopoverContent>
