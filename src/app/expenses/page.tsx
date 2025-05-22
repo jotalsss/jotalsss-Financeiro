@@ -12,6 +12,7 @@ import { PlusCircle, TrendingDown } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/common/delete-confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { addMonths, startOfMonth } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ExpensesPage() {
   const { expenseList, addExpense, updateExpense, deleteExpense } = useFinancialData();
@@ -100,11 +101,15 @@ export default function ExpensesPage() {
   if (!isClient) {
      return (
       <div className="space-y-6">
-        <PageHeader title="Despesas" description="Monitore e gerencie suas despesas." icon={TrendingDown} />
-        <div className="animate-pulse">
-          <div className="h-12 w-32 rounded-md bg-muted"></div>
-          <div className="mt-6 h-64 rounded-md bg-muted"></div>
-          <div className="mt-6 h-96 rounded-md bg-muted"></div>
+        <PageHeader 
+            title="Despesas" 
+            description="Registre e categorize todos os seus gastos, incluindo compras parceladas." 
+            icon={TrendingDown} 
+            action={<Skeleton className="h-10 w-48 rounded-md" />}
+        />
+        <div className="animate-pulse space-y-6">
+          {/* Espaço para o formulário se estivesse visível, mas não é o caso no estado inicial */}
+          <Skeleton className="h-96 rounded-lg" /> {/* Placeholder para ExpenseList Card */}
         </div>
       </div>
     );

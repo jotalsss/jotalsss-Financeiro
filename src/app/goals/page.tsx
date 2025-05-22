@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Target as TargetIcon } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/common/delete-confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function GoalsPage() {
   const { goalList, addGoal, updateGoal, deleteGoal } = useFinancialData();
@@ -60,11 +62,19 @@ export default function GoalsPage() {
   if (!isClient) {
      return (
       <div className="space-y-6">
-        <PageHeader title="Metas Financeiras" description="Defina e acompanhe suas metas financeiras." icon={TargetIcon} />
-        <div className="animate-pulse">
-          <div className="h-12 w-32 rounded-md bg-muted"></div>
-          <div className="mt-6 h-64 rounded-md bg-muted"></div>
-          <div className="mt-6 h-96 rounded-md bg-muted"></div>
+        <PageHeader 
+            title="Metas Financeiras" 
+            description="Defina suas ambições financeiras e acompanhe seu progresso." 
+            icon={TargetIcon} 
+            action={<Skeleton className="h-10 w-48 rounded-md" />} // "Definir Nova Meta"
+        />
+        <div className="animate-pulse space-y-6">
+          {/* Espaço para o formulário se estivesse visível */}
+           <div className="mt-6 grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            <Skeleton className="h-56 rounded-lg" />
+            <Skeleton className="h-56 rounded-lg" />
+            <Skeleton className="h-56 rounded-lg" />
+          </div> {/* Placeholder para GoalList */}
         </div>
       </div>
     );

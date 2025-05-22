@@ -8,7 +8,7 @@ import { IncomeList } from "@/components/income/income-list";
 import { useFinancialData } from "@/hooks/use-financial-data";
 import type { Income, DefaultMonthlyIncome } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, TrendingUp, Edit3, Trash, Save, XCircle } from "lucide-react";
+import { PlusCircle, TrendingUp, Edit3, Trash, Save } from "lucide-react"; // Removido XCircle
 import { DeleteConfirmationDialog } from "@/components/common/delete-confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { getMonth, getYear } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 export default function IncomePage() {
@@ -129,13 +130,28 @@ export default function IncomePage() {
 
   if (!isClient) {
     return (
-      <div className="space-y-6">
-        <PageHeader title="Receitas" description="Gerencie suas fontes de receita." icon={TrendingUp} />
-        <div className="animate-pulse">
-          <div className="h-12 w-32 rounded-md bg-muted"></div>
-          <div className="mt-6 h-40 rounded-md bg-muted"></div>
-          <div className="mt-6 h-64 rounded-md bg-muted"></div>
-          <div className="mt-6 h-96 rounded-md bg-muted"></div>
+      <div className="space-y-8">
+        <PageHeader 
+            title="Receitas" 
+            description="Monitore e gerencie todas as suas fontes de receita, incluindo seu salário padrão." 
+            icon={TrendingUp}
+            action={<Skeleton className="h-10 w-56 rounded-md" />} // "Adicionar Receita Avulsa"
+        />
+        <div className="animate-pulse space-y-6">
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-6 w-1/2 rounded-md mb-2" /> {/* CardTitle Salário */}
+                    <Skeleton className="h-4 w-3/4 rounded-md" /> {/* CardDescription Salário */}
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-5 w-1/3 rounded-md" /> {/* Conteúdo Salário */}
+                </CardContent>
+                <CardFooter>
+                    <Skeleton className="h-10 w-48 rounded-md" /> {/* Botão Editar/Definir Salário */}
+                </CardFooter>
+            </Card>
+          {/* Espaço para o formulário se estivesse visível */}
+          <Skeleton className="h-96 rounded-lg" /> {/* Placeholder para IncomeList Card */}
         </div>
       </div>
     );
